@@ -31,7 +31,7 @@ message.AddContent(new Content("<b>This is a test message</b>", ContentType.Html
 
 // Add Recipients
 message.AddTo(new MailUser("recipient1@proofpoint.com", "Recipient 1"));
-//message.AddTo(new MailUser("recipient2@proofpoint.com", "Recipient 2"));
+message.AddTo(new MailUser("recipient2@proofpoint.com", "Recipient 2"));
 
 // Add CC
 message.AddCc(new MailUser("cc1@proofpoint.com", "Carbon Copy 1"));
