@@ -5,6 +5,24 @@
     <RootNamespace>ser_mail_api</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+    <!-- Allow GitHub Actions to override the version dynamically -->
+    <Version>0.0.0</Version> <!-- Placeholder, overridden during build -->
+
+    <!-- NuGet Metadata -->
+    <PackageId>ser_mail_api</PackageId>
+    <Authors>Your Name</Authors>
+    <Company>Your Company (if applicable)</Company>
+    <Description>An email API client for sending and managing emails.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/pfptcommunity/ser-mail-api-csharp</RepositoryUrl>
+    <PackageTags>email, api, mail, csharp, .net</PackageTags>
+    <PackageProjectUrl>https://github.com/pfptcommunity/ser-mail-api-csharp</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
+    <IncludeSymbols>true</IncludeSymbols>
+    <IncludeSource>true</IncludeSource>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <PackageReadmeFile>../README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
