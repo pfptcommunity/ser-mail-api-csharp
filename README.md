@@ -146,7 +146,7 @@ The following JSON data is a dump of the message object based on the code above.
 
 ### Proxy Support
 
-`ser_mail_api` supports HTTP and HTTPS proxies by allowing users to pass a custom `HttpClientHandler` when initializing the `Client`.
+`Proofpoint.SecureEmailRelay.Mail` supports HTTP and HTTPS proxies by allowing users to pass a custom `HttpClientHandler` when initializing the `Client`.
 
 To configure an HTTP(S) proxy, create a **custom `HttpClientHandler`** and pass it to the client:
 
