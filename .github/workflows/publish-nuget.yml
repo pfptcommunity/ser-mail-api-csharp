@@ -1,0 +1,35 @@
+name: Publish NuGet Package
+
+on:
+  push:
+    tags:
+      - 'v*'  # Runs only when a version tag (e.g., v1.0.0) is pushed
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '6.0.x'
+
+      - name: Extract version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+
+      - name: Restore dependencies
+        run: dotnet restore ser-mail-api.sln
+
+      - name: Build the project
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Pack NuGet package with dynamic version
+        run: dotnet pack src/ser-mail-api/ser-mail-api.csproj --configuration Release --output nupkg /p:Version=${{ env.VERSION }}
+
+      - name: Publish to NuGet
+        run: dotnet nuget push nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
