@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35707.178
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ser-mail-api", "src\ser-mail-api\ser-mail-api.csproj", "{BE09A61C-94D2-4D01-915F-7D90E346E8ED}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ser-api-test", "example\ser-api-test\ser-api-test.csproj", "{217C2C1E-D40A-48D7-9C00-70397F626AE9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BE09A61C-94D2-4D01-915F-7D90E346E8ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE09A61C-94D2-4D01-915F-7D90E346E8ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE09A61C-94D2-4D01-915F-7D90E346E8ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE09A61C-94D2-4D01-915F-7D90E346E8ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{217C2C1E-D40A-48D7-9C00-70397F626AE9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{217C2C1E-D40A-48D7-9C00-70397F626AE9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{217C2C1E-D40A-48D7-9C00-70397F626AE9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{217C2C1E-D40A-48D7-9C00-70397F626AE9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
