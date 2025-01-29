@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>Proofpoint.SecureEmailRelay.Mail</RootNamespace>
-	<AssemblyName>Proofpoint.SecureEmailRelay.Mail</AssemblyName>
+    <AssemblyName>Proofpoint.SecureEmailRelay.Mail</AssemblyName>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
