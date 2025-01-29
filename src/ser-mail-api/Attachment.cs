@@ -55,7 +55,7 @@ namespace ser_mail_api
 
         public Attachment(string content, string filename, string mimeType, Disposition disposition = Disposition.Attachment, bool validateMimeType = true)
         {
-            if (!TryDecodeBase64(content, out byte[] decodedContent)) throw new ArgumentException("Invalid Base64 content", nameof(content));
+            if (!TryDecodeBase64(content, out _)) throw new ArgumentException("Invalid Base64 content", nameof(content));
             if (filename.Length > 1000) throw new ArgumentException("Filename must be at most 1000 characters long", nameof(filename));
             if (string.IsNullOrWhiteSpace(mimeType)) throw new ArgumentException("Mime type must be a non-empty string", nameof(mimeType));
             if (validateMimeType && !MimeTypesMap.IsMimeTypeMapped(mimeType)) throw new ArgumentException($"Mime type '{mimeType}' appears to be invalid, consider disabling mime type validation.", nameof(mimeType));
