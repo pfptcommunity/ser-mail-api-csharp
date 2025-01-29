@@ -22,14 +22,18 @@ jobs:
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
 
+      # Restore dependencies ONLY for the NuGet package project
       - name: Restore dependencies
-        run: dotnet restore ser-mail-api.sln
+        run: dotnet restore src/ser-mail-api/ser-mail-api.csproj
 
+      # Build ONLY the NuGet package project
       - name: Build the project
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build src/ser-mail-api/ser-mail-api.csproj --configuration Release --no-restore
 
+      # Pack ONLY the NuGet package (excluding example/)
       - name: Pack NuGet package with dynamic version
         run: dotnet pack src/ser-mail-api/ser-mail-api.csproj --configuration Release --output nupkg /p:Version=${{ env.VERSION }}
 
-      # - name: Publish to NuGet
+      # Publish ONLY the library to NuGet (excluding example/)
+      #- name: Publish to NuGet
       #  run: dotnet nuget push nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
