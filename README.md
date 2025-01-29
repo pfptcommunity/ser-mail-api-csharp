@@ -9,7 +9,7 @@ Library implements all the functions of the SER Email Relay API via C#.
 ### Creating an API client object
 
 ```C#
-using ser_mail_api;
+using Proofpoint.SecureEmailRelay.Mail;
 
 Client client = new("<client_id>", "<client_secret>");
 ```
@@ -17,7 +17,7 @@ Client client = new("<client_id>", "<client_secret>");
 ### Sending an Email Message
 
 ```C#
-using ser_mail_api;
+using Proofpoint.SecureEmailRelay.Mail;
 using System.Text;
 
 Client client = new("<client_id>", "<client_secret>");
@@ -33,21 +33,24 @@ message.AddContent(new Content("<b>This is a test message</b>", ContentType.Html
 message.AddTo(new MailUser("recipient1@proofpoint.com", "Recipient 1"));
 //message.AddTo(new MailUser("recipient2@proofpoint.com", "Recipient 2"));
 
-//// Add CC
+// Add CC
 message.AddCc(new MailUser("cc1@proofpoint.com", "Carbon Copy 1"));
 message.AddCc(new MailUser("cc2@proofpoint.com", "Carbon Copy 2"));
 
-//// Add BCC;
+// Add BCC;
 message.AddBcc(new MailUser("bcc2@proofpoint.com", "Blind Carbon Copy 1"));
 message.AddBcc(new MailUser("bcc2@proofpoint.com", "Blind Carbon Copy 2"));
 
+// Add Base64 Encoded Attachment
 message.AddAttachment(new Attachment("VGhpcyBpcyBhIHRlc3Qh", "test.txt", "text/plain", Disposition.Attachment));
+
+// Add File Attachment from Disk, if Disposition is not passed, the default is Disposition.Attachment
 message.AddAttachment(new FileAttachment(@"C:\temp\file.csv", Disposition.Attachment));
 
 // Convert the string to a byte array using UTF8 encoding
 byte[] bytes = Encoding.UTF8.GetBytes("This is a sample text stream.");
 
-// Add Byte Stream as Attachment, if Disposition is not passed, the default is Disposition.Attachment
+// Add Byte array as Attachment, if Disposition is not passed, the default is Disposition.Attachment
 message.AddAttachment(new BinaryAttachment(bytes, "bytes.txt", "text/plain", Disposition.Attachment));
 
 // Print Message object as JSON text
@@ -146,13 +149,13 @@ The following JSON data is a dump of the message object based on the code above.
 
 ### Proxy Support
 
-`ser_mail_api` supports HTTP and HTTPS proxies by allowing users to pass a custom `HttpClientHandler` when initializing the `Client`.
+`Proofpoint.SecureEmailRelay.Mail` supports HTTP and HTTPS proxies by allowing users to pass a custom `HttpClientHandler` when initializing the `Client`.
 
 To configure an HTTP(S) proxy, create a **custom `HttpClientHandler`** and pass it to the client:
 
 ```csharp
 using System.Net;
-using ser_mail_api;
+using Proofpoint.SecureEmailRelay.Mail;
 
 // Configure an HTTP/HTTPS proxy
 var proxy = new WebProxy("http://your-proxy-server:port")
