@@ -68,7 +68,7 @@ namespace ser_mail_api
             Id = Guid.NewGuid().ToString();
         }
 
-        private bool TryDecodeBase64(string base64String, out byte[] decodedBytes)
+        private bool TryDecodeBase64(string base64String, out byte[]? decodedBytes) // Make decodedBytes nullable
         {
             try
             {
@@ -77,7 +77,7 @@ namespace ser_mail_api
             }
             catch (FormatException)
             {
-                decodedBytes = null;
+                decodedBytes = Array.Empty<byte>(); // Assign an empty byte array instead of null
                 return false;
             }
         }
