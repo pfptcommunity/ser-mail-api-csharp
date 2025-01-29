@@ -11,9 +11,9 @@
 
     <!-- NuGet Metadata -->
     <PackageId>ser_mail_api</PackageId>
-    <Authors>Your Name</Authors>
-    <Company>Your Company (if applicable)</Company>
-    <Description>An email API client for sending and managing emails.</Description>
+    <Authors>Ludvik Jerabek</Authors>
+    <Company>Proofpoint</Company>
+    <Description>An email API client for Proofpoint Secure Email Relay.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/pfptcommunity/ser-mail-api-csharp</RepositoryUrl>
     <PackageTags>email, api, mail, csharp, .net</PackageTags>
