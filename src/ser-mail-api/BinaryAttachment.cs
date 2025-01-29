@@ -8,7 +8,7 @@
 
         private static string EncodeBytes(byte[] bytes)
         {
-            if (bytes?.Length == 0)
+            if (bytes == null || bytes.Length == 0) // Explicit null check
                 throw new ArgumentException("Bytes cannot be null or empty.", nameof(bytes));
 
             return Convert.ToBase64String(bytes);
