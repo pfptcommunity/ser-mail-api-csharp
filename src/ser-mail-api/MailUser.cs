@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace ser_mail_api
+namespace Proofpoint.SecureEmailRelay.Mail
 {
     // MailUser Class
     public class MailUser

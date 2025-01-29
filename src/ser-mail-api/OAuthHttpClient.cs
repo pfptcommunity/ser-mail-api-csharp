@@ -2,7 +2,7 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
 
-namespace ser_mail_api
+namespace Proofpoint.SecureEmailRelay.Mail
 {
     internal class OAuthHttpClient : IHttpClient
     {

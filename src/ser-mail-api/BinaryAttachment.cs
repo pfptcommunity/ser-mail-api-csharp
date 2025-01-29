@@ -1,4 +1,4 @@
-﻿namespace ser_mail_api
+﻿namespace Proofpoint.SecureEmailRelay.Mail
 {
     public class BinaryAttachment : Attachment
     {

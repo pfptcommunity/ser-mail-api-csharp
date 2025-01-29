@@ -1,4 +1,4 @@
-﻿using ser_mail_api;
+﻿using Proofpoint.SecureEmailRelay.Mail;
 using System.Text;
 
 Client client = new("<client_id>", "<client_secret>");

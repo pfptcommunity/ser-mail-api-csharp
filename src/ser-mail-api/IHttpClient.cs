@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace ser_mail_api
+namespace Proofpoint.SecureEmailRelay.Mail
 {
     internal interface IHttpClient
     {

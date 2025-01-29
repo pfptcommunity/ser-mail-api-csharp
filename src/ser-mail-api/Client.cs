@@ -4,7 +4,7 @@ using System.Text;
 using IdentityModel.Client;
 using System.Net.Http.Headers;
 
-namespace ser_mail_api
+namespace Proofpoint.SecureEmailRelay.Mail
 {
     public class Client
     {
