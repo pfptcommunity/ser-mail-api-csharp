@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <RootNamespace>ser_mail_api</RootNamespace>
+    <RootNamespace>Proofpoint.SecureEmailRelay.Mail</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
@@ -10,7 +10,7 @@
     <Version>0.0.0</Version> <!-- Placeholder, overridden during build -->
 
     <!-- NuGet Metadata -->
-    <PackageId>ser_mail_api</PackageId>
+    <PackageId>Proofpoint.SecureEmailRelay.Mail</PackageId>
     <Authors>Ludvik Jerabek</Authors>
     <Company>Proofpoint</Company>
     <Description>An email API client for Proofpoint Secure Email Relay.</Description>
