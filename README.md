@@ -144,6 +144,32 @@ The following JSON data is a dump of the message object based on the code above.
 }
 ```
 
+### Proxy Support
+
+`ser_mail_api` supports HTTP and HTTPS proxies by allowing users to pass a custom `HttpClientHandler` when initializing the `Client`.
+
+To configure an HTTP(S) proxy, create a **custom `HttpClientHandler`** and pass it to the client:
+
+```csharp
+using System.Net;
+using ser_mail_api;
+
+// Configure an HTTP/HTTPS proxy
+var proxy = new WebProxy("http://your-proxy-server:port")
+{
+    Credentials = new NetworkCredential("your-username", "your-password") // Optional authentication
+};
+
+var httpClientHandler = new HttpClientHandler
+{
+    Proxy = proxy,
+    UseProxy = true // Ensures proxy usage
+};
+
+// Initialize the client with proxy support
+Client client = new("<client_id>", "<client_secret>", httpClientHandler);
+```
+
 ### Limitations
 
 There are no known limitations.
