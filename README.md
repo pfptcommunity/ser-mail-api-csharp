@@ -9,7 +9,7 @@ Library implements all the functions of the SER Email Relay API via C#.
 ### Creating an API client object
 
 ```C#
-using ser_mail_api;
+using Proofpoint.SecureEmailRelay.Mail;
 
 Client client = new("<client_id>", "<client_secret>");
 ```
@@ -17,7 +17,7 @@ Client client = new("<client_id>", "<client_secret>");
 ### Sending an Email Message
 
 ```C#
-using ser_mail_api;
+using Proofpoint.SecureEmailRelay.Mail;
 using System.Text;
 
 Client client = new("<client_id>", "<client_secret>");
@@ -152,7 +152,7 @@ To configure an HTTP(S) proxy, create a **custom `HttpClientHandler`** and pass 
 
 ```csharp
 using System.Net;
-using ser_mail_api;
+using Proofpoint.SecureEmailRelay.Mail;
 
 // Configure an HTTP/HTTPS proxy
 var proxy = new WebProxy("http://your-proxy-server:port")
