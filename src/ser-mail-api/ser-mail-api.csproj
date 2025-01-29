@@ -6,6 +6,7 @@
     <AssemblyName>Proofpoint.SecureEmailRelay.Mail</AssemblyName>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <PackageIcon>icon.png</PackageIcon>
 
     <!-- Allow GitHub Actions to override the version dynamically -->
     <Version>0.0.0</Version> <!-- Placeholder, overridden during build -->
@@ -24,13 +25,15 @@
     <IncludeSource>true</IncludeSource>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile> <!-- Updated to use a local README file -->
+    <PackageDocumentationUrl>https://api-docs.ser.proofpoint.com/docs/email-submission</PackageDocumentationUrl>
   </PropertyGroup>
 
   <!-- Ensure README.md is included in the package -->
   <ItemGroup>
     <None Include="../../README.md" Pack="true" PackagePath="README.md" />
+	<None Include="icon.png" Pack="true" PackagePath="icon.png" />
   </ItemGroup>
-
+	
   <ItemGroup>
     <PackageReference Include="IdentityModel" Version="7.0.0" />
   </ItemGroup>
