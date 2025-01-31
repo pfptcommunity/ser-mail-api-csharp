@@ -37,15 +37,12 @@ namespace Proofpoint.SecureEmailRelay.Mail
 
     public class Attachment
     {
-        //private const int MaxFilenameLength = 1000;
-        //private const int MaxMimeTypeLength = 255;
-
         [JsonPropertyName("content")]
         public string Content { get; }
 
         [JsonConverter(typeof(DispositionJsonConverter))]
         [JsonPropertyName("disposition")]
-        public Disposition Disposition { get; set; }
+        public Disposition Disposition { get; }
 
         [JsonPropertyName("filename")]
         public string Filename { get; }
@@ -56,7 +53,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
         [JsonPropertyName("type")]
         public string MimeType { get; }
 
-        public Attachment(string content, string filename, string mimeType, Disposition disposition = Disposition.Attachment, bool validateMimeType = true)
+        private Attachment(string content, string filename, string mimeType, Disposition disposition = Disposition.Attachment, bool validateMimeType = true)
         {
             if (!TryDecodeBase64(content, out _))
                 throw new ArgumentException("Invalid Base64 content", nameof(content));
@@ -64,24 +61,11 @@ namespace Proofpoint.SecureEmailRelay.Mail
             if (string.IsNullOrWhiteSpace(filename))
                 throw new ArgumentException("Filename cannot be empty or whitespace.", nameof(filename));
 
-            //if (filename.Length > MaxFilenameLength)
-            //    throw new ArgumentException($"Filename must be at most {MaxFilenameLength} characters long.", nameof(filename));
-
             if (string.IsNullOrWhiteSpace(mimeType))
-                throw new ArgumentException("Mime type must be a non-empty string.", nameof(mimeType));
+                throw new ArgumentException("MIME type must be a non-empty string.", nameof(mimeType));
 
-            //if (mimeType.Length > MaxMimeTypeLength)
-            //    throw new ArgumentException($"Mime type must be at most {MaxMimeTypeLength} characters long.", nameof(mimeType));
-
-            if (validateMimeType)
-            {
-                if (!MimeTypesMap.IsMimeTypeMapped(mimeType))
-                    throw new ArgumentException($"Mime type '{mimeType}' appears to be invalid, consider disabling mime type validation.", nameof(mimeType));
-
-                string inferredMimeType = MimeTypesMap.GetMimeType(filename);
-                if (!StringComparer.OrdinalIgnoreCase.Equals(inferredMimeType, mimeType))
-                    throw new ArgumentException($"Specified mime type '{mimeType}' conflicts with inferred type '{inferredMimeType}' based on file name '{filename}', consider disabling mime type validation.");
-            }
+            if (validateMimeType && !MimeTypesMap.IsMimeTypeMapped(mimeType))
+                throw new ArgumentException($"MIME type '{mimeType}' appears to be invalid. Consider disabling MIME type validation.", nameof(mimeType));
 
             Content = content;
             Disposition = disposition;
@@ -90,7 +74,42 @@ namespace Proofpoint.SecureEmailRelay.Mail
             Id = Guid.NewGuid().ToString();
         }
 
-        private bool TryDecodeBase64(string base64String, out byte[]? decodedBytes)
+        // Factory Methods
+        public static Attachment FromBase64String(string base64Content, string filename, string mimeType, Disposition disposition = Disposition.Attachment, bool validateMimeType = true)
+            => new Attachment(base64Content, filename, mimeType, disposition, validateMimeType);
+
+        public static Attachment FromFile(string filePath, Disposition disposition = Disposition.Attachment, bool allowFallbackMimeType = false)
+        {
+            if (!File.Exists(filePath))
+                throw new FileNotFoundException("File not found", filePath);
+
+            string base64Content = EncodeFileContent(filePath);
+            string mimeType = GetMimeType(filePath, allowFallbackMimeType);
+
+            return new Attachment(base64Content, Path.GetFileName(filePath), mimeType, disposition);
+        }
+
+        public static Attachment FromFile(string filePath, string mimeType, Disposition disposition = Disposition.Attachment, bool validateMimeType = true)
+        {
+            if (!File.Exists(filePath))
+                throw new FileNotFoundException("File not found", filePath);
+
+            string base64Content = EncodeFileContent(filePath);
+
+            return new Attachment(EncodeFileContent(filePath), Path.GetFileName(filePath), mimeType, disposition, validateMimeType);
+        }
+
+        public static Attachment FromBytes(byte[] data, string filename, string mimeType, Disposition disposition = Disposition.Attachment)
+        {
+            string base64Content = "";
+
+            if (data.Length > 0)
+                base64Content = Convert.ToBase64String(data);
+
+            return new Attachment(base64Content, filename, mimeType, disposition);
+        }
+
+        private static bool TryDecodeBase64(string base64String, out byte[]? decodedBytes)
         {
             try
             {
@@ -104,14 +123,30 @@ namespace Proofpoint.SecureEmailRelay.Mail
             }
             catch (FormatException)
             {
-                decodedBytes = Array.Empty<byte>();
+                decodedBytes = null;
                 return false;
             }
         }
 
-        public override string ToString()
+        private static string EncodeFileContent(string filePath)
         {
-            return JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
+            byte[] fileBytes = File.ReadAllBytes(filePath);
+
+            if (fileBytes.Length == 0)
+                throw new ArgumentException($"File '{filePath}' is empty and cannot be converted to an attachment.");
+
+            return Convert.ToBase64String(fileBytes);
         }
+
+        private static string GetMimeType(string filePath, bool allowFallbackMimeType)
+        {
+            if (!MimeTypesMap.IsFileMapped(filePath) && !allowFallbackMimeType)
+                throw new ArgumentException($"MIME type could not be determined for '{filePath}'. Provide a MIME type explicitly or allow fallback.");
+
+            return MimeTypesMap.GetMimeType(filePath);
+        }
+
+        public override string ToString()
+            => JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
     }
 }
