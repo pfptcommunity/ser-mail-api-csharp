@@ -51,9 +51,6 @@ namespace Proofpoint.SecureEmailRelay.Mail
 
             if (tokenResponse.IsError)
             {
-                Console.WriteLine($"Error: {tokenResponse.Error}\n");
-                Console.WriteLine($"HTTP Status Code: {tokenResponse.HttpStatusCode}\n");
-                Console.WriteLine($"Raw Response: {tokenResponse.Raw}\n");
                 throw new HttpRequestException($"Failed to retrieve access token: {tokenResponse.Error}");
             }
 
