@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Proofpoint.SecureEmailRelay.Mail
 {
-    public class SendResult
+    public sealed class SendResult
     {
         public string MessageId { get; init; } = string.Empty;
         public string Reason { get; init; } = string.Empty;
