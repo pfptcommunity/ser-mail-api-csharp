@@ -1,20 +1,16 @@
-﻿using System.Net.Http;
-using System.Text.Json;
+﻿using IdentityModel.Client;
 using System.Text;
-using IdentityModel.Client;
-using System.Net.Http.Headers;
+using System.Text.Json;
 
 namespace Proofpoint.SecureEmailRelay.Mail
 {
-    public class Client
+    public sealed class Client
     {
         private readonly OAuthHttpClient httpClient;
 
-        // Default constructor (uses a standard HttpClientHandler)
         public Client(string clientId, string clientSecret)
             : this(clientId, clientSecret, new HttpClientHandler()) { }
 
-        // Constructor that accepts a custom HttpClientHandler
         public Client(string clientId, string clientSecret, HttpClientHandler httpClientHandler)
         {
             var request = new ClientCredentialsTokenRequest
@@ -26,7 +22,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
             };
 
             httpClient = new OAuthHttpClient(new HttpClient(httpClientHandler), request);
-            
+
             httpClient.HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd("CSharp-SER-API/1.0");
             httpClient.HttpClient.BaseAddress = new Uri("https://mail.ser.proofpoint.com/v1/");
         }
@@ -38,9 +34,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
 
             HttpResponseMessage response = await httpClient.PostAsync("send", content);
 
-            string? responseJson = await response.Content.ReadAsStringAsync();
-
-            return new SendResult(response, responseJson);
+            return await SendResult.CreateAsync(response);
         }
     }
 }
