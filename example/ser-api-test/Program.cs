@@ -44,7 +44,7 @@ message.AddReplyTo(new MailUser("reply_to1@proofpoint.com", "Reply To 1"));
 message.AddReplyTo(new MailUser("reply_to2@proofpoint.com", "Reply To 2"));
 
 // Add Base64 empty attachment, this currently doesn't work with the REST API.
-message.AddAttachment(Attachment.FromBase64String("", "empty.txt", "text/plain2", Disposition.Attachment));
+message.AddAttachment(Attachment.FromBase64String("", "empty.txt", "text/plain", Disposition.Attachment));
 
 // Add Base64 encoded attachment
 message.AddAttachment(Attachment.FromBase64String("VGhpcyBpcyBhIHRlc3Qh", "test.txt", "text/plain", Disposition.Attachment));
