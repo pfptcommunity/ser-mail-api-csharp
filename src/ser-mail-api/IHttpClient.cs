@@ -1,6 +1,4 @@
-﻿using System.ComponentModel;
-
-namespace Proofpoint.SecureEmailRelay.Mail
+﻿namespace Proofpoint.SecureEmailRelay.Mail
 {
     internal interface IHttpClient
     {
