@@ -22,7 +22,6 @@ namespace Proofpoint.SecureEmailRelay.Mail
             };
 
             httpClient = new OAuthHttpClient(new HttpClient(httpClientHandler), request);
-
             httpClient.HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd("CSharp-SER-API/1.0");
             httpClient.HttpClient.BaseAddress = new Uri("https://mail.ser.proofpoint.com/v1/");
         }
@@ -30,6 +29,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
         public async Task<SendResult> Send(Message message)
         {
             var json = JsonSerializer.Serialize(message);
+
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             HttpResponseMessage response = await httpClient.PostAsync("send", content);
