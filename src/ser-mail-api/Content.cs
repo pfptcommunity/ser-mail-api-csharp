@@ -35,8 +35,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
         }
     }
 
-    // Content Class
-    public class Content
+    public sealed class Content
     {
         [JsonPropertyName("body")]
         public string Body { get; set; }
@@ -54,7 +53,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
         {
             return JsonSerializer.Serialize(this, new JsonSerializerOptions
             {
-                WriteIndented = true // Enables pretty-printing
+                WriteIndented = true
             });
         }
     }

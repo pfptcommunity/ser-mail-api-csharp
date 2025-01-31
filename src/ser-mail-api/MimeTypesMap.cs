@@ -1019,7 +1019,6 @@
                 return (forwardMap, reverseMap);
             });
 
-        // Accessors for lazy-initialized dictionaries
         private static Dictionary<string, string> _mimeTypeMap => _mimeTypeMaps.Value.Forward;
         private static Dictionary<string, List<string>> _reverseMimeTypeMap => _mimeTypeMaps.Value.Reverse;
 
@@ -1060,10 +1059,9 @@
 
         public static void AddOrUpdate(string mime, string extension)
         {
-            // Ensure that both dictionaries are initialized
+
             _ = _mimeTypeMaps.Value;
 
-            // Remove previous mappings of the extension
             foreach (var key in _reverseMimeTypeMap.Keys.ToList())
             {
                 _reverseMimeTypeMap[key].Remove(extension);

@@ -28,13 +28,12 @@ namespace Proofpoint.SecureEmailRelay.Mail
         {
             if (!string.IsNullOrEmpty(_accessToken) && _tokenExpiration.HasValue && DateTime.UtcNow < _tokenExpiration.Value)
             {
-                return; // Token is still valid
+                return;
             }
 
             await _tokenSemaphore.WaitAsync();
             try
             {
-                // Double-check within the lock
                 if (string.IsNullOrEmpty(_accessToken) || !_tokenExpiration.HasValue || DateTime.UtcNow >= _tokenExpiration.Value)
                 {
                     await RefreshTokenAsync();
