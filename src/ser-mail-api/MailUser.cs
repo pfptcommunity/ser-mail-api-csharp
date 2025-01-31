@@ -11,6 +11,8 @@ namespace Proofpoint.SecureEmailRelay.Mail
         [JsonPropertyName("name")]
         public string Name { get; set; }
 
+        public MailUser(string email) : this(email, "") { }
+
         public MailUser(string email, string name)
         {
             Email = email;
