@@ -17,26 +17,19 @@ namespace Proofpoint.SecureEmailRelay.Mail
             HttpResponse = httpResponse;
             RawJson = rawJson ?? string.Empty;
 
-            try
+            if (!string.IsNullOrWhiteSpace(RawJson))
             {
-                if (!string.IsNullOrWhiteSpace(RawJson))
+                var parsedJson = JsonSerializer.Deserialize<SendResultDto>(RawJson, new JsonSerializerOptions
                 {
-                    var parsedJson = JsonSerializer.Deserialize<SendResultDto>(RawJson, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
+                    PropertyNameCaseInsensitive = true
+                });
 
-                    if (parsedJson != null)
-                    {
-                        MessageId = parsedJson.MessageId ?? string.Empty;
-                        Reason = parsedJson.Reason ?? string.Empty;
-                        RequestId = parsedJson.RequestId ?? string.Empty;
-                    }
+                if (parsedJson != null)
+                {
+                    MessageId = parsedJson.MessageId ?? string.Empty;
+                    Reason = parsedJson.Reason ?? string.Empty;
+                    RequestId = parsedJson.RequestId ?? string.Empty;
                 }
-            }
-            catch (JsonException ex)
-            {
-                Console.WriteLine($"Failed to parse JSON response: {ex.Message}");
             }
         }
 
