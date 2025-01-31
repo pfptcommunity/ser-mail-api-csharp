@@ -6,14 +6,6 @@ Library implements all the functions of the SER Email Relay API via C#.
 
 * .NET 6.0
 
-### Creating an API client object
-
-```C#
-using Proofpoint.SecureEmailRelay.Mail;
-
-Client client = new("<client_id>", "<client_secret>");
-```
-
 ### Sending an Email Message
 
 ```C#
