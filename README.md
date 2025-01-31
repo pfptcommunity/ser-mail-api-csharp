@@ -203,6 +203,30 @@ var httpClientHandler = new HttpClientHandler
 Client client = new("<client_id>", "<client_secret>", httpClientHandler);
 ```
 
+### Known Issues
+
+I've reached out to product management regarding a possible bug caused by empty file content. Empty files should be allowed to be sent via email but the API currently will reject those messages. This is most likely a corner case but in the event a system generates an empty file, that file will be rejected by the REST endpoint. Below is an example of empty content.
+
+```json
+{
+      "content": "",
+      "disposition": "attachment",
+      "filename": "empty.txt",
+      "id": "1ed38149-70b2-4476-84a1-83e73913d43c",
+      "type": "text/plain"
+}
+```
+
+This type of content leads to use issuing an error.
+
+```
+Status Code: 400 BadRequest
+Message ID:
+Reason: attachments[0].content is required
+Request ID: fe9a1acf60a20c9d90bed843f6530156
+Raw JSON: {"request_id":"fe9a1acf60a20c9d90bed843f6530156","reason":"attachments[0].content is required"}
+```
+
 ### Limitations
 
 There are no known limitations.
