@@ -78,24 +78,38 @@ The following JSON data is a dump of the message object based on the code above.
 {
   "attachments": [
     {
+      "content": "",
+      "disposition": "attachment",
+      "filename": "empty.txt",
+      "id": "2fa8a8cd-7661-4bfe-8a9b-2c1dde469206",
+      "type": "text/plain"
+    },
+    {
       "content": "VGhpcyBpcyBhIHRlc3Qh",
       "disposition": "attachment",
       "filename": "test.txt",
-      "id": "d10205cf-a0a3-4b9e-9a57-253fd8e1c7df",
+      "id": "9adcbd55-325c-4f74-ad5b-6fe5fbefd3b0",
       "type": "text/plain"
     },
     {
       "content": "77u/IlVzZXIiLCJTZW50Q291bnQiLCJSZWNlaXZlZENvdW50Ig0KIm5vcmVwbHlAcHJvb2Zwb2ludC5jb20sIGxqZXJhYmVrQHBmcHQuaW8iLCIwIiwiMCINCg==",
       "disposition": "attachment",
       "filename": "file.csv",
-      "id": "f66487f5-57c2-40e0-9402-5723a85c0df0",
-      "type": "application/vnd.ms-excel"
+      "id": "a43a0f62-02ac-4631-bb6d-ec1518b8b57c",
+      "type": "text/csv"
     },
     {
       "content": "VGhpcyBpcyBhIHNhbXBsZSB0ZXh0IHN0cmVhbS4=",
       "disposition": "attachment",
-      "filename": "byte_stream.txt",
-      "id": "bc67d5fa-345a-4436-9979-5efa68223520",
+      "filename": "bytes.txt",
+      "id": "7a0c7928-0d14-456a-81d8-01e4169964f2",
+      "type": "text/plain"
+    },
+    {
+      "content": "",
+      "disposition": "attachment",
+      "filename": "nobytes.txt",
+      "id": "b9dddb78-6448-4b7b-b766-a922e58d9ddf",
       "type": "text/plain"
     }
   ],
@@ -105,7 +119,7 @@ The following JSON data is a dump of the message object based on the code above.
       "type": "text/plain"
     },
     {
-      "body": "<b>This is a test message</b>",
+      "body": "\u003Cb\u003EThis is a test message\u003C/b\u003E",
       "type": "text/html"
     }
   ],
@@ -122,35 +136,44 @@ The following JSON data is a dump of the message object based on the code above.
   "subject": "This is a test email",
   "tos": [
     {
-      "email": "recipient1@proofpoint.com",
+      "email": "to_recipient1@proofpoint.com",
       "name": "Recipient 1"
     },
     {
-      "email": "recipient2@proofpoint.com",
+      "email": "to_recipient2@proofpoint.com",
       "name": "Recipient 2"
     }
   ],
   "cc": [
     {
-      "email": "cc1@proofpoint.com",
+      "email": "cc_recipient1@proofpoint.com",
       "name": "Carbon Copy 1"
     },
     {
-      "email": "cc2@proofpoint.com",
+      "email": "cc_recipient2@proofpoint.com",
       "name": "Carbon Copy 2"
     }
   ],
   "bcc": [
     {
-      "email": "bcc1@proofpoint.com",
+      "email": "bcc_recipient2@proofpoint.com",
       "name": "Blind Carbon Copy 1"
     },
     {
-      "email": "bcc2@proofpoint.com",
+      "email": "bcc_recipient2@proofpoint.com",
       "name": "Blind Carbon Copy 2"
     }
   ],
-  "replyTos": []
+  "replyTos": [
+    {
+      "email": "reply_to1@proofpoint.com",
+      "name": "Reply To 1"
+    },
+    {
+      "email": "reply_to2@proofpoint.com",
+      "name": "Reply To 2"
+    }
+  ]
 }
 ```
 
