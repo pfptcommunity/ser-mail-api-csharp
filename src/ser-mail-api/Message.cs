@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Proofpoint.SecureEmailRelay.Mail
 {
-    public class Message
+    public sealed class Message
     {
         [JsonPropertyName("attachments")]
         public List<Attachment> Attachments { get; set; } = new List<Attachment>();
@@ -15,7 +15,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
         public MailUser From { get; set; }
 
         [JsonPropertyName("headers")]
-        public Dictionary<string, MailUser> Headers { get; set; } = new Dictionary<string, MailUser>();
+        public MessageHeaders Headers { get; set; }
 
         [JsonPropertyName("subject")]
         public string Subject { get; set; }
@@ -36,7 +36,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
         {
             Subject = subject;
             From = from;
-            Headers["from"] = from;
+            Headers = new MessageHeaders(from);
         }
 
         public void AddAttachment(Attachment attachment) => Attachments.Add(attachment);
@@ -50,7 +50,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
         {
             return JsonSerializer.Serialize(this, new JsonSerializerOptions
             {
-                WriteIndented = true // Enables pretty-printing
+                WriteIndented = true
             });
         }
     }
