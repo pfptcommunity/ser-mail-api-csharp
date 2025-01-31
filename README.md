@@ -212,7 +212,7 @@ I've reached out to product management regarding a possible bug caused by empty 
 }
 ```
 
-This type of content leads to use issuing an error.
+This type of content leads to an REST response with error.
 
 ```
 Status Code: 400 BadRequest
