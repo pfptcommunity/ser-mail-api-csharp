@@ -35,9 +35,13 @@ message.AddTo(new MailUser("to_recipient2@proofpoint.com", "Recipient 2"));
 message.AddCc(new MailUser("cc_recipient1@proofpoint.com", "Carbon Copy 1"));
 message.AddCc(new MailUser("cc_recipient2@proofpoint.com", "Carbon Copy 2"));
 
-// Add BCC;
+// Add BCC
 message.AddBcc(new MailUser("bcc_recipient2@proofpoint.com", "Blind Carbon Copy 1"));
 message.AddBcc(new MailUser("bcc_recipient2@proofpoint.com", "Blind Carbon Copy 2"));
+
+// Reply To
+message.AddReplyTo(new MailUser("reply_to1@proofpoint.com", "Reply To 1"));
+message.AddReplyTo(new MailUser("reply_to2@proofpoint.com", "Reply To 2"));
 
 // Add Base64 empty attachment, this currently doesn't work with the REST API.
 message.AddAttachment(new Attachment("", "empty.txt", "text/plain", Disposition.Attachment));
@@ -67,5 +71,3 @@ Console.WriteLine($"Message ID: {sendResult.MessageId}");
 Console.WriteLine($"Reason: {sendResult.Reason}");
 Console.WriteLine($"Request ID: {sendResult.RequestId}");
 Console.WriteLine($"Raw JSON: {sendResult.RawJson}");
-
-
