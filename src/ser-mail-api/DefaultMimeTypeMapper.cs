@@ -1056,7 +1056,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
             {
                 if (_mimeTypeMap.TryGetValue(extension, out string? existingMimeType))
                 {
-                    _mimeTypes.Remove(existingMimeType); // Remove old MIME type if updated
+                    _mimeTypes.Remove(existingMimeType);
                 }
 
                 bool isNewEntry = !_mimeTypeMap.ContainsKey(extension);
