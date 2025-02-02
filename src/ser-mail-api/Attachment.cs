@@ -34,10 +34,10 @@ namespace Proofpoint.SecureEmailRelay.Mail
             writer.WriteStringValue(stringValue);
         }
     }
-
     public class Attachment
     {
-        private static IMimeTypeMapper _globalMimeMapper = new DefaultMimeTypeMapper();
+
+        private static IMimeTypeMapper _defaultMimeTypeMapper = new DefaultMimeTypeMapper();
 
         [JsonPropertyName("content")]
         public string Content { get; }
@@ -55,7 +55,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
         [JsonPropertyName("type")]
         public string MimeType { get; }
 
-        private Attachment(string content, string filename, string mimeType, Disposition disposition = Disposition.Attachment)
+        private Attachment(string content, string filename, string mimeType, Disposition disposition)
         {
             if (!TryDecodeBase64(content, out _))
                 throw new ArgumentException("Invalid Base64 content", nameof(content));
@@ -66,7 +66,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
             if (string.IsNullOrWhiteSpace(mimeType))
                 throw new ArgumentException("MIME type must be a non-empty string.", nameof(mimeType));
 
-            if (!_globalMimeMapper.IsValidMimeType(mimeType))
+            if (!_defaultMimeTypeMapper.IsValidMimeType(mimeType))
                 throw new ArgumentException($"The specified MIME type '{mimeType}' is not recognized or supported. Ensure it is a valid and standard MIME type.", nameof(mimeType));
 
             Content = content;
@@ -76,35 +76,51 @@ namespace Proofpoint.SecureEmailRelay.Mail
             Id = Guid.NewGuid().ToString();
         }
 
-        // Factory Methods
         public static Attachment FromBase64String(string base64Content, string filename, string mimeType, Disposition disposition = Disposition.Attachment)
-            => new Attachment(base64Content, filename, mimeType, disposition);
+            => FromBase64String(base64Content, filename, mimeType, _defaultMimeTypeMapper, disposition);
+
+        public static Attachment FromBase64String(string base64Content, string filename, string mimeType, IMimeTypeMapper mimeTypeMapper, Disposition disposition = Disposition.Attachment)
+        {
+            if (!mimeTypeMapper.IsValidMimeType(mimeType))
+                throw new ArgumentException($"Invalid MIME type '{mimeType}'. Ensure it is a valid and standard MIME type.", nameof(mimeType));
+
+            return new Attachment(base64Content, filename, mimeType, disposition);
+        }
 
         public static Attachment FromFile(string filePath, Disposition disposition = Disposition.Attachment)
+            => FromFile(filePath, _defaultMimeTypeMapper, disposition);
+
+        public static Attachment FromFile(string filePath, IMimeTypeMapper mimeTypeMapper, Disposition disposition = Disposition.Attachment)
         {
             if (!File.Exists(filePath))
                 throw new FileNotFoundException("File not found", filePath);
 
-            return new Attachment(EncodeFileContent(filePath), Path.GetFileName(filePath), _globalMimeMapper.GetMimeType(filePath), disposition);
+            return new Attachment(EncodeFileContent(filePath), Path.GetFileName(filePath), mimeTypeMapper.GetMimeType(filePath), disposition);
         }
 
         public static Attachment FromFile(string filePath, string mimeType, Disposition disposition = Disposition.Attachment)
+            => FromFile(filePath, mimeType, _defaultMimeTypeMapper, disposition);
+
+        public static Attachment FromFile(string filePath, string mimeType, IMimeTypeMapper mimeTypeMapper, Disposition disposition = Disposition.Attachment)
         {
             if (!File.Exists(filePath))
                 throw new FileNotFoundException("File not found", filePath);
 
-            string base64Content = EncodeFileContent(filePath);
+            if (!mimeTypeMapper.IsValidMimeType(mimeType))
+                throw new ArgumentException($"Invalid MIME type '{mimeType}'. Ensure it is a valid and standard MIME type.", nameof(mimeType));
 
             return new Attachment(EncodeFileContent(filePath), Path.GetFileName(filePath), mimeType, disposition);
         }
 
         public static Attachment FromBytes(byte[] data, string filename, string mimeType, Disposition disposition = Disposition.Attachment)
+            => FromBytes(data, filename, mimeType, _defaultMimeTypeMapper, disposition);
+
+        public static Attachment FromBytes(byte[] data, string filename, string mimeType, IMimeTypeMapper mimeTypeMapper, Disposition disposition = Disposition.Attachment)
         {
-            string base64Content = "";
+            if (!mimeTypeMapper.IsValidMimeType(mimeType))
+                throw new ArgumentException($"Invalid MIME type '{mimeType}'. Ensure it is a valid and standard MIME type.", nameof(mimeType));
 
-            if (data.Length > 0)
-                base64Content = Convert.ToBase64String(data);
-
+            string base64Content = data.Length > 0 ? Convert.ToBase64String(data) : string.Empty;
             return new Attachment(base64Content, filename, mimeType, disposition);
         }
 
@@ -136,14 +152,12 @@ namespace Proofpoint.SecureEmailRelay.Mail
 
             return Convert.ToBase64String(fileBytes);
         }
-
-        // Allows Setting a Global Mime Mapper
-        public static void SetGlobalMimeTypeMapper(IMimeTypeMapper mimeTypeMapper)
+        public static void SetDefaultMimeTypeMapper(IMimeTypeMapper mimeTypeMapper)
         {
-            _globalMimeMapper = mimeTypeMapper ?? throw new ArgumentNullException(nameof(mimeTypeMapper));
+            _defaultMimeTypeMapper = mimeTypeMapper ?? throw new ArgumentNullException(nameof(mimeTypeMapper));
         }
 
-        public override string ToString()
-            => JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
+        public override string ToString() => JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
     }
+
 }
