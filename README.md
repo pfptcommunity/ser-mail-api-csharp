@@ -60,9 +60,14 @@ Client client = new("your_client_id", "your_client_secret");
 
 Message message = new("Email with Inline Image", new MailUser("sender@example.com", "John Doe"));
 
-message.AddContent(new Content("<img src=\"cid:logo.png\">", ContentType.Html));
+// Create an inline image attachment (Content-ID is auto-generated)
+var logo = Attachment.FromFile(@"C:\path\logo.png", Disposition.Inline);
 
-message.AddAttachment(Attachment.FromFile(@"C:\path\to\logo.png", Disposition.Inline));
+// Add the attachment to the message
+message.AddAttachment(logo);
+
+// Reference the attachment using Content-ID inside the email body
+message.AddContent(new Content($"<img src=\"cid:{logo.Id}\">", ContentType.Html));
 
 message.AddTo(new MailUser("recipient@example.com", "Jane Doe"));
 
