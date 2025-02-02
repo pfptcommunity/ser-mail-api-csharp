@@ -40,6 +40,8 @@ message.AddContent(new Content("This email contains an attachment.", ContentType
 
 message.AddAttachment(Attachment.FromFile(@"C:\path\to\document.pdf"));
 
+message.AddTo(new MailUser("recipient@example.com", "Jane Doe"));
+
 SendResult sendResult = await client.Send(message);
 
 Console.WriteLine($"Status Code: {(int)sendResult.HttpResponse.StatusCode} {sendResult.HttpResponse.StatusCode}");
@@ -61,6 +63,8 @@ Message message = new("Email with Inline Image", new MailUser("sender@example.co
 message.AddContent(new Content("<img src=\"cid:logo.png\">", ContentType.Html));
 
 message.AddAttachment(Attachment.FromFile(@"C:\path\to\logo.png", Disposition.Inline));
+
+message.AddTo(new MailUser("recipient@example.com", "Jane Doe"));
 
 SendResult sendResult = await client.Send(message);
 
@@ -85,6 +89,8 @@ message.AddContent(new Content("This email contains a Base64 encoded attachment.
 
 message.AddAttachment(Attachment.FromBase64String(base64Content, "document.pdf", "application/pdf"));
 
+message.AddTo(new MailUser("recipient@example.com", "Jane Doe"));
+
 SendResult sendResult = await client.Send(message);
 
 Console.WriteLine($"Status Code: {(int)sendResult.HttpResponse.StatusCode} {sendResult.HttpResponse.StatusCode}");
@@ -107,6 +113,8 @@ Message message = new("Email with Byte Array Attachment", new MailUser("sender@e
 message.AddContent(new Content("This email contains a text file attachment.", ContentType.Text));
 
 message.AddAttachment(Attachment.FromBytes(fileBytes, "sample.txt", "text/plain"));
+
+message.AddTo(new MailUser("recipient@example.com", "Jane Doe"));
 
 SendResult sendResult = await client.Send(message);
 
