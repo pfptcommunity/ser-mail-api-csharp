@@ -6,57 +6,18 @@ Library implements all the functions of the SER Email Relay API via C#.
 
 * .NET 6.0
 
-### Sending an Email Message
-
-```C#
+### Sending a Simple Email with Plain Text and HTML Content
+```csharp
 using Proofpoint.SecureEmailRelay.Mail;
-using System.Text;
 
-Client client = new("<client_id>", "<client_secret>");
+Client client = new("your_client_id", "your_client_secret");
 
-// Create a new Message object
-Message message = new("This is a test email", new MailUser("sender@proofpoint.com", "Joe Sender"));
+Message message = new("Hello World Email", new MailUser("sender@example.com", "John Doe"));
 
-// Add content body
-message.AddContent(new Content("This is a test message", ContentType.Text));
-message.AddContent(new Content("<b>This is a test message</b>", ContentType.Html));
+message.AddContent(new Content("Hello, this is a test email.", ContentType.Text));
+message.AddContent(new Content("<b>Hello, this is a test email.</b>", ContentType.Html));
 
-// Add To
-message.AddTo(new MailUser("to_recipient1@proofpoint.com", "Recipient 1"));
-message.AddTo(new MailUser("to_recipient2@proofpoint.com", "Recipient 2"));
-
-// Add CC
-message.AddCc(new MailUser("cc_recipient1@proofpoint.com", "Carbon Copy 1"));
-message.AddCc(new MailUser("cc_recipient2@proofpoint.com", "Carbon Copy 2"));
-
-// Add BCC
-message.AddBcc(new MailUser("bcc_recipient2@proofpoint.com", "Blind Carbon Copy 1"));
-message.AddBcc(new MailUser("bcc_recipient2@proofpoint.com", "Blind Carbon Copy 2"));
-
-// Reply To
-message.AddReplyTo(new MailUser("reply_to1@proofpoint.com", "Reply To 1"));
-message.AddReplyTo(new MailUser("reply_to2@proofpoint.com", "Reply To 2"));
-
-// Add Base64 empty attachment, this currently doesn't work with the REST API.
-// message.AddAttachment(Attachment.FromBase64String("", "empty.txt", "text/plain", Disposition.Attachment));
-
-// Add Base64 encoded attachment
-message.AddAttachment(Attachment.FromBase64String("VGhpcyBpcyBhIHRlc3Qh", "test.txt", "text/plain", Disposition.Attachment));
-
-// Add file attachment from disk, if disposition is not passed, the default is Disposition.Attachment
-message.AddAttachment(Attachment.FromFile(@"C:\temp\file.csv", Disposition.Attachment));
-
-// Convert the string to a byte array using UTF8 encoding
-byte[] bytes = Encoding.UTF8.GetBytes("This is a sample text stream.");
-
-// Add byte array as attachment, if disposition is not passed, the default is Disposition.Attachment
-message.AddAttachment(Attachment.FromBytes(bytes, "bytes.txt", "text/plain", Disposition.Attachment));
-
-// Add empty attachment, this currently doesn't work with the REST API. 
-// message.AddAttachment(Attachment.FromBytes(Array.Empty<byte>(), "nobytes.txt", "text/plain", Disposition.Attachment));
-
-// Print Message object as JSON text
-Console.WriteLine(message.ToString());
+message.AddTo(new MailUser("recipient@example.com", "Jane Doe"));
 
 SendResult sendResult = await client.Send(message);
 
@@ -67,109 +28,123 @@ Console.WriteLine($"Request ID: {sendResult.RequestId}");
 Console.WriteLine($"Raw JSON: {sendResult.RawJson}");
 ```
 
-The following JSON data is a dump of the message object based on the code above.
+### Sending an Email with an Attachment (File from Disk)
+```csharp
+using Proofpoint.SecureEmailRelay.Mail;
 
-```json
-{
-  "attachments": [
-    {
-      "content": "",
-      "disposition": "attachment",
-      "filename": "empty.txt",
-      "id": "2fa8a8cd-7661-4bfe-8a9b-2c1dde469206",
-      "type": "text/plain"
-    },
-    {
-      "content": "VGhpcyBpcyBhIHRlc3Qh",
-      "disposition": "attachment",
-      "filename": "test.txt",
-      "id": "9adcbd55-325c-4f74-ad5b-6fe5fbefd3b0",
-      "type": "text/plain"
-    },
-    {
-      "content": "77u/IlVzZXIiLCJTZW50Q291bnQiLCJSZWNlaXZlZENvdW50Ig0KIm5vcmVwbHlAcHJvb2Zwb2ludC5jb20sIGxqZXJhYmVrQHBmcHQuaW8iLCIwIiwiMCINCg==",
-      "disposition": "attachment",
-      "filename": "file.csv",
-      "id": "a43a0f62-02ac-4631-bb6d-ec1518b8b57c",
-      "type": "text/csv"
-    },
-    {
-      "content": "VGhpcyBpcyBhIHNhbXBsZSB0ZXh0IHN0cmVhbS4=",
-      "disposition": "attachment",
-      "filename": "bytes.txt",
-      "id": "7a0c7928-0d14-456a-81d8-01e4169964f2",
-      "type": "text/plain"
-    },
-    {
-      "content": "",
-      "disposition": "attachment",
-      "filename": "nobytes.txt",
-      "id": "b9dddb78-6448-4b7b-b766-a922e58d9ddf",
-      "type": "text/plain"
-    }
-  ],
-  "content": [
-    {
-      "body": "This is a test message",
-      "type": "text/plain"
-    },
-    {
-      "body": "\u003Cb\u003EThis is a test message\u003C/b\u003E",
-      "type": "text/html"
-    }
-  ],
-  "from": {
-    "email": "sender@proofpoint.com",
-    "name": "Joe Sender"
-  },
-  "headers": {
-    "from": {
-      "email": "sender@proofpoint.com",
-      "name": "Joe Sender"
-    }
-  },
-  "subject": "This is a test email",
-  "tos": [
-    {
-      "email": "to_recipient1@proofpoint.com",
-      "name": "Recipient 1"
-    },
-    {
-      "email": "to_recipient2@proofpoint.com",
-      "name": "Recipient 2"
-    }
-  ],
-  "cc": [
-    {
-      "email": "cc_recipient1@proofpoint.com",
-      "name": "Carbon Copy 1"
-    },
-    {
-      "email": "cc_recipient2@proofpoint.com",
-      "name": "Carbon Copy 2"
-    }
-  ],
-  "bcc": [
-    {
-      "email": "bcc_recipient2@proofpoint.com",
-      "name": "Blind Carbon Copy 1"
-    },
-    {
-      "email": "bcc_recipient2@proofpoint.com",
-      "name": "Blind Carbon Copy 2"
-    }
-  ],
-  "replyTos": [
-    {
-      "email": "reply_to1@proofpoint.com",
-      "name": "Reply To 1"
-    },
-    {
-      "email": "reply_to2@proofpoint.com",
-      "name": "Reply To 2"
-    }
-  ]
-}
+Client client = new("your_client_id", "your_client_secret");
+
+Message message = new("Email with Attachment", new MailUser("sender@example.com", "John Doe"));
+
+message.AddContent(new Content("This email contains an attachment.", ContentType.Text));
+
+message.AddAttachment(Attachment.FromFile(@"C:\path\to\document.pdf"));
+
+SendResult sendResult = await client.Send(message);
+
+Console.WriteLine($"Status Code: {(int)sendResult.HttpResponse.StatusCode} {sendResult.HttpResponse.StatusCode}");
+Console.WriteLine($"Message ID: {sendResult.MessageId}");
+Console.WriteLine($"Reason: {sendResult.Reason}");
+Console.WriteLine($"Request ID: {sendResult.RequestId}");
+Console.WriteLine($"Raw JSON: {sendResult.RawJson}");
+```
+
+### Sending an Email with an Inline Image
+
+```csharp
+using Proofpoint.SecureEmailRelay.Mail;
+
+Client client = new("your_client_id", "your_client_secret");
+
+Message message = new("Email with Inline Image", new MailUser("sender@example.com", "John Doe"));
+
+message.AddContent(new Content("<img src=\"cid:logo.png\">", ContentType.Html));
+
+message.AddAttachment(Attachment.FromFile(@"C:\path\to\logo.png", Disposition.Inline));
+
+SendResult sendResult = await client.Send(message);
+
+Console.WriteLine($"Status Code: {(int)sendResult.HttpResponse.StatusCode} {sendResult.HttpResponse.StatusCode}");
+Console.WriteLine($"Message ID: {sendResult.MessageId}");
+Console.WriteLine($"Reason: {sendResult.Reason}");
+Console.WriteLine($"Request ID: {sendResult.RequestId}");
+Console.WriteLine($"Raw JSON: {sendResult.RawJson}");
+```
+
+### Sending an Email with a Base64 Encoded Attachment
+```csharp
+using Proofpoint.SecureEmailRelay.Mail;
+
+Client client = new("your_client_id", "your_client_secret");
+
+string base64Content = Convert.ToBase64String(File.ReadAllBytes(@"C:\path\to\document.pdf"));
+
+Message message = new("Email with Base64 Attachment", new MailUser("sender@example.com", "John Doe"));
+
+message.AddContent(new Content("This email contains a Base64 encoded attachment.", ContentType.Text));
+
+message.AddAttachment(Attachment.FromBase64String(base64Content, "document.pdf", "application/pdf"));
+
+SendResult sendResult = await client.Send(message);
+
+Console.WriteLine($"Status Code: {(int)sendResult.HttpResponse.StatusCode} {sendResult.HttpResponse.StatusCode}");
+Console.WriteLine($"Message ID: {sendResult.MessageId}");
+Console.WriteLine($"Reason: {sendResult.Reason}");
+Console.WriteLine($"Request ID: {sendResult.RequestId}");
+Console.WriteLine($"Raw JSON: {sendResult.RawJson}");
+```
+
+### Sending an Email with an Attachment from a Byte Array
+```
+using Proofpoint.SecureEmailRelay.Mail;
+
+Client client = new("your_client_id", "your_client_secret");
+
+byte[] fileBytes = Encoding.UTF8.GetBytes("This is a sample text file.");
+
+Message message = new("Email with Byte Array Attachment", new MailUser("sender@example.com", "John Doe"));
+
+message.AddContent(new Content("This email contains a text file attachment.", ContentType.Text));
+
+message.AddAttachment(Attachment.FromBytes(fileBytes, "sample.txt", "text/plain"));
+
+SendResult sendResult = await client.Send(message);
+
+Console.WriteLine($"Status Code: {(int)sendResult.HttpResponse.StatusCode} {sendResult.HttpResponse.StatusCode}");
+Console.WriteLine($"Message ID: {sendResult.MessageId}");
+Console.WriteLine($"Reason: {sendResult.Reason}");
+Console.WriteLine($"Request ID: {sendResult.RequestId}");
+Console.WriteLine($"Raw JSON: {sendResult.RawJson}");
+```
+
+
+### Sending an Email with Multiple Recipients (To, CC, BCC)
+
+```csharp
+using Proofpoint.SecureEmailRelay.Mail;
+
+Client client = new("your_client_id", "your_client_secret");
+
+Message message = new("Multi-Recipient Email", new MailUser("sender@example.com", "John Doe"));
+
+message.AddContent(new Content("This email has multiple recipients.", ContentType.Text));
+
+message.AddTo(new MailUser("to1@example.com", "To Recipient 1"));
+message.AddTo(new MailUser("to2@example.com", "To Recipient 2"));
+
+message.AddCc(new MailUser("cc1@example.com", "CC Recipient 1"));
+message.AddCc(new MailUser("cc2@example.com", "CC Recipient 2"));
+
+message.AddBcc(new MailUser("bcc1@example.com", "BCC Recipient 1"));
+message.AddBcc(new MailUser("bcc2@example.com", "BCC Recipient 2"));
+
+SendResult sendResult = await client.Send(message);
+
+Console.WriteLine($"Status Code: {(int)sendResult.HttpResponse.StatusCode} {sendResult.HttpResponse.StatusCode}");
+Console.WriteLine($"Message ID: {sendResult.MessageId}");
+Console.WriteLine($"Reason: {sendResult.Reason}");
+Console.WriteLine($"Request ID: {sendResult.RequestId}");
+Console.WriteLine($"Raw JSON: {sendResult.RawJson}");
 ```
 
 ### Proxy Support
