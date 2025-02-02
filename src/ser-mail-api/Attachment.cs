@@ -37,6 +37,8 @@ namespace Proofpoint.SecureEmailRelay.Mail
 
     public class Attachment
     {
+        private static IMimeTypeMapper _globalMimeMapper = new DefaultMimeTypeMapper();
+
         [JsonPropertyName("content")]
         public string Content { get; }
 
@@ -53,7 +55,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
         [JsonPropertyName("type")]
         public string MimeType { get; }
 
-        private Attachment(string content, string filename, string mimeType, Disposition disposition = Disposition.Attachment, bool validateMimeType = true)
+        private Attachment(string content, string filename, string mimeType, Disposition disposition = Disposition.Attachment)
         {
             if (!TryDecodeBase64(content, out _))
                 throw new ArgumentException("Invalid Base64 content", nameof(content));
@@ -64,8 +66,8 @@ namespace Proofpoint.SecureEmailRelay.Mail
             if (string.IsNullOrWhiteSpace(mimeType))
                 throw new ArgumentException("MIME type must be a non-empty string.", nameof(mimeType));
 
-            if (validateMimeType && !MimeTypesMap.IsMimeTypeMapped(mimeType))
-                throw new ArgumentException($"MIME type '{mimeType}' appears to be invalid. Consider disabling MIME type validation.", nameof(mimeType));
+            if (!_globalMimeMapper.IsValidMimeType(mimeType))
+                throw new ArgumentException($"The specified MIME type '{mimeType}' is not recognized or supported. Ensure it is a valid and standard MIME type.", nameof(mimeType));
 
             Content = content;
             Disposition = disposition;
@@ -75,28 +77,25 @@ namespace Proofpoint.SecureEmailRelay.Mail
         }
 
         // Factory Methods
-        public static Attachment FromBase64String(string base64Content, string filename, string mimeType, Disposition disposition = Disposition.Attachment, bool validateMimeType = true)
-            => new Attachment(base64Content, filename, mimeType, disposition, validateMimeType);
+        public static Attachment FromBase64String(string base64Content, string filename, string mimeType, Disposition disposition = Disposition.Attachment)
+            => new Attachment(base64Content, filename, mimeType, disposition);
 
-        public static Attachment FromFile(string filePath, Disposition disposition = Disposition.Attachment, bool allowFallbackMimeType = false)
+        public static Attachment FromFile(string filePath, Disposition disposition = Disposition.Attachment)
         {
             if (!File.Exists(filePath))
                 throw new FileNotFoundException("File not found", filePath);
 
-            string base64Content = EncodeFileContent(filePath);
-            string mimeType = GetMimeType(filePath, allowFallbackMimeType);
-
-            return new Attachment(base64Content, Path.GetFileName(filePath), mimeType, disposition);
+            return new Attachment(EncodeFileContent(filePath), Path.GetFileName(filePath), _globalMimeMapper.GetMimeType(filePath), disposition);
         }
 
-        public static Attachment FromFile(string filePath, string mimeType, Disposition disposition = Disposition.Attachment, bool validateMimeType = true)
+        public static Attachment FromFile(string filePath, string mimeType, Disposition disposition = Disposition.Attachment)
         {
             if (!File.Exists(filePath))
                 throw new FileNotFoundException("File not found", filePath);
 
             string base64Content = EncodeFileContent(filePath);
 
-            return new Attachment(EncodeFileContent(filePath), Path.GetFileName(filePath), mimeType, disposition, validateMimeType);
+            return new Attachment(EncodeFileContent(filePath), Path.GetFileName(filePath), mimeType, disposition);
         }
 
         public static Attachment FromBytes(byte[] data, string filename, string mimeType, Disposition disposition = Disposition.Attachment)
@@ -138,12 +137,10 @@ namespace Proofpoint.SecureEmailRelay.Mail
             return Convert.ToBase64String(fileBytes);
         }
 
-        private static string GetMimeType(string filePath, bool allowFallbackMimeType)
+        // Allows Setting a Global Mime Mapper
+        public static void SetGlobalMimeTypeMapper(IMimeTypeMapper mimeTypeMapper)
         {
-            if (!MimeTypesMap.IsFileMapped(filePath) && !allowFallbackMimeType)
-                throw new ArgumentException($"MIME type could not be determined for '{filePath}'. Provide a MIME type explicitly or allow fallback.");
-
-            return MimeTypesMap.GetMimeType(filePath);
+            _globalMimeMapper = mimeTypeMapper ?? throw new ArgumentNullException(nameof(mimeTypeMapper));
         }
 
         public override string ToString()
