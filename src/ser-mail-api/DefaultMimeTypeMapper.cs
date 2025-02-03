@@ -6,16 +6,10 @@ namespace Proofpoint.SecureEmailRelay.Mail
     {
         private readonly Dictionary<string, string> _mimeTypeMap;
         private readonly HashSet<string> _mimeTypes;
-        private readonly object _lock = new(); // Thread safety lock
+        private readonly object _lock = new();
 
-        // IF AllowFallbackMimeType is set to true, and the file's mime type can not be determined
-        // this will be the default mime type assigned, by default 
         public string DefaultMimeType { get; set; }
-
-        // Allow a default fallback if mime type can not be determined from the filename.
         public bool AllowFallbackMimeType { get; set; }
-
-        // Allows disabling or enabling mime type string validity eg. text/html
         public bool AllowUnknownMimeType { get; set; }
 
         public DefaultMimeTypeMapper()
