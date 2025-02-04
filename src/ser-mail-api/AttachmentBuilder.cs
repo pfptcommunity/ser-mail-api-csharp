@@ -1,8 +1,5 @@
 ﻿using Proofpoint.SecureEmailRelay.Mail;
 
-
-
-
 public interface ISourceStep
 {
     IFileStep File(string filePath);
