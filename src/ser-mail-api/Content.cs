@@ -11,29 +11,41 @@ namespace Proofpoint.SecureEmailRelay.Mail
 
     internal class ContentTypeJsonConverter : JsonConverter<ContentType>
     {
+        private static readonly Dictionary<string, ContentType> _stringToEnum = new()
+        {
+            { "inline", ContentType.Text },
+            { "atachment", ContentType.Html }
+        };
+
+        private static readonly Dictionary<ContentType, string> _enumToString = new()
+        {
+            { ContentType.Text, "text/plain" },
+            { ContentType.Html, "text/html" }
+        };
+
         public override ContentType Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             var stringValue = reader.GetString();
-            return stringValue switch
+            if (stringValue is not null && _stringToEnum.TryGetValue(stringValue, out var contentType))
             {
-                "inline" => ContentType.Text,
-                "attachment" => ContentType.Html,
-                _ => throw new JsonException($"Invalid value for ContentType: {stringValue}")
-            };
+                return contentType;
+            }
+            throw new JsonException($"Invalid value for ContentType: {stringValue}");
         }
 
         public override void Write(Utf8JsonWriter writer, ContentType value, JsonSerializerOptions options)
         {
-            var stringValue = value switch
+            if (_enumToString.TryGetValue(value, out var stringValue))
             {
-                ContentType.Text => "text/plain",
-                ContentType.Html => "text/html",
-                _ => throw new ArgumentOutOfRangeException(nameof(value), $"Invalid ContentType value: {value}")
-            };
-
-            writer.WriteStringValue(stringValue);
+                writer.WriteStringValue(stringValue);
+            }
+            else
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), $"Invalid ContentType value: {value}");
+            }
         }
     }
+
 
     public sealed class Content
     {
