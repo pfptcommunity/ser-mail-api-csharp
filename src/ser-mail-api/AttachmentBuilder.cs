@@ -1,47 +1,80 @@
 ﻿using Proofpoint.SecureEmailRelay.Mail;
 
-public class AttachmentBuilder
+
+
+
+public interface ISourceStep
 {
-    private string _content = null!;
-    private string _filename = null!;
-    private string _mimeType = null!;
+    IFileStep File(string filePath);
+    IManualStep Base64(string base64Content);
+    IManualStep Bytes(byte[] data);
+}
+
+// Set any and terminate
+public interface IFileStep : IBuildStep
+{
+    IFileStep Mime(string mimeType);
+    IFileStep Name(string filename);
+    IFileStep Inline();
+    IFileStep Attachment();
+}
+
+public interface IManualStep
+{
+    IManualMimeStep Name(string filename);
+}
+
+public interface IManualMimeStep
+{
+    IManualDispositionStep Mime(string mimeType);
+}
+
+public interface IManualDispositionStep : IBuildStep
+{
+    IInlineStep Inline();
+}
+
+public interface IInlineStep
+{
+    IBuildStep CId(string contentId);
+}
+public interface IBuildStep
+{
+    Attachment Build();
+}
+
+public class AttachmentBuilder : ISourceStep, IFileStep, IManualStep, IManualMimeStep, IManualDispositionStep, IInlineStep, IBuildStep
+{
+    private string _content = string.Empty;
+    private string _filename = string.Empty;
+    private string _mimeType = string.Empty;
     private Disposition _disposition = Disposition.Attachment;
-    private string _Id = null!;
-    private bool _hasSource = false;
+    private string? _id;
     private readonly IMimeTypeMapper _mimeTypeMapper;
 
-    public AttachmentBuilder() : this(new DefaultMimeTypeMapper()) { }
-
-    public AttachmentBuilder(IMimeTypeMapper mimeTypeMapper)
+    internal AttachmentBuilder(IMimeTypeMapper mimeTypeMapper)
     {
-        _mimeTypeMapper = mimeTypeMapper ?? throw new ArgumentNullException(nameof(mimeTypeMapper));
+        _mimeTypeMapper = mimeTypeMapper;
     }
 
+    internal AttachmentBuilder() :
+        this(new DefaultMimeTypeMapper())
+    { }
 
-    public AttachmentBuilder SetDisposition(Disposition disposition)
-    {
-        _disposition = disposition;
-
-        if (_disposition == Disposition.Inline && string.IsNullOrWhiteSpace(_Id))
-        {
-            _Id = Guid.NewGuid().ToString();
-        }
-        return this;
-    }
-
-    public AttachmentBuilder FromFile(string filePath)
+    // === Step 1: Select source ===
+    IFileStep ISourceStep.File(string filePath)
     {
         if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
             throw new FileNotFoundException("File not found.", filePath);
 
-        _content = EncodeFileContent(filePath);
+        _content = Convert.ToBase64String(File.ReadAllBytes(filePath));
         _filename = Path.GetFileName(filePath);
         _mimeType = _mimeTypeMapper.GetMimeType(_filename);
-        _hasSource = true;
+
         return this;
     }
 
-    public AttachmentBuilder FromBase64(string base64Content)
+    IManualStep ISourceStep.Base64(string base64Content)
     {
         base64Content = base64Content.Trim();
 
@@ -52,38 +85,21 @@ public class AttachmentBuilder
             throw new ArgumentException("Invalid Base64 content", nameof(base64Content));
 
         _content = base64Content;
-        _hasSource = true;
         return this;
     }
 
-    public AttachmentBuilder FromBytes(byte[] data)
+    IManualStep ISourceStep.Bytes(byte[] data)
     {
         if (data == null)
             throw new ArgumentException("Byte array cannot be null.", nameof(data));
 
-        //TODO: check if ToBase64String will work if data is an empty array.
         _content = data.Length > 0 ? Convert.ToBase64String(data) : string.Empty;
-        _hasSource = true;
         return this;
     }
 
-    public AttachmentBuilder SetFilename(string filename)
+    // === Step 2A: File-based methods ===
+    public IFileStep Mime(string mimeType)
     {
-        if (!_hasSource)
-            throw new InvalidOperationException("You must set the content source before setting the filename.");
-
-        if (string.IsNullOrWhiteSpace(filename))
-            throw new ArgumentException("Filename cannot be empty or whitespace.", nameof(filename));
-
-        _filename = filename;
-        return this;
-    }
-
-    public AttachmentBuilder SetMimeType(string mimeType)
-    {
-        if (!_hasSource)
-            throw new InvalidOperationException("You must set the content source before setting the MIME type.");
-
         if (string.IsNullOrWhiteSpace(mimeType) || !_mimeTypeMapper.IsValidMimeType(mimeType))
             throw new ArgumentException($"Invalid MIME type: {mimeType}", nameof(mimeType));
 
@@ -91,47 +107,76 @@ public class AttachmentBuilder
         return this;
     }
 
-    public AttachmentBuilder SetContentId(string contentId)
+    public IFileStep Name(string filename)
     {
-        if (_disposition != Disposition.Inline)
-            throw new InvalidOperationException("Content ID can only be set for inline attachments.");
+        if (string.IsNullOrWhiteSpace(filename))
+            throw new ArgumentException("Filename cannot be empty.", nameof(filename));
 
-        if (string.IsNullOrWhiteSpace(contentId))
-            throw new ArgumentException("Content ID cannot be empty or whitespace.", nameof(contentId));
-
-        _Id = contentId;
+        _filename = filename;
         return this;
     }
 
-    public Attachment Build()
+    public IFileStep Inline()
     {
-        Validate();
-        return new Attachment(_content, _filename, _mimeType, _disposition, _Id);
+        _disposition = Disposition.Inline;
+        _id = Guid.NewGuid().ToString();
+        return this;
     }
 
-    private void Validate()
+    public IFileStep Attachment()
     {
-        if (!_hasSource)
-            throw new InvalidOperationException("You must set the content source before building the attachment.");
+        _disposition = Disposition.Attachment;
+        return this;
+    }
 
+    // === Step 2B: Manual-based methods ===
+    IManualMimeStep IManualStep.Name(string filename)
+    {
+        if (string.IsNullOrWhiteSpace(filename))
+            throw new ArgumentException("Filename cannot be empty.", nameof(filename));
+
+        _filename = filename;
+        return this;
+    }
+
+    IManualDispositionStep IManualMimeStep.Mime(string mimeType)
+    {
+        if (string.IsNullOrWhiteSpace(mimeType) || !_mimeTypeMapper.IsValidMimeType(mimeType))
+            throw new ArgumentException($"Invalid MIME type: {mimeType}", nameof(mimeType));
+
+        _mimeType = mimeType;
+        return this;
+    }
+
+    IInlineStep IManualDispositionStep.Inline()
+    {
+        _disposition = Disposition.Inline;
+        _id = Guid.NewGuid().ToString();
+        return this;
+    }
+
+    IBuildStep IInlineStep.CId(string contentId)
+    {
+        if (string.IsNullOrWhiteSpace(contentId))
+            throw new ArgumentException("Content ID cannot be empty.", nameof(contentId));
+
+        _id = contentId;
+        return this;
+    }
+
+    // === Final Step: Build ===
+    public Attachment Build()
+    {
         if (string.IsNullOrWhiteSpace(_filename))
             throw new InvalidOperationException("Filename must be set.");
 
         if (string.IsNullOrWhiteSpace(_mimeType))
             throw new InvalidOperationException("MIME type must be set.");
 
-        if (_disposition == Disposition.Inline && string.IsNullOrWhiteSpace(_Id))
+        if (_disposition == Disposition.Inline && string.IsNullOrWhiteSpace(_id))
             throw new InvalidOperationException("Inline attachments must have a Content ID.");
-    }
 
-    private static string EncodeFileContent(string filePath)
-    {
-        byte[] fileBytes = File.ReadAllBytes(filePath);
-
-        if (fileBytes.Length == 0)
-            throw new ArgumentException($"File '{filePath}' is empty and cannot be converted to an attachment.");
-
-        return Convert.ToBase64String(fileBytes);
+        return new Attachment(_content, _filename, _mimeType, _disposition, _id);
     }
 
     private static bool TryDecodeBase64(string base64String, out byte[]? decodedBytes)

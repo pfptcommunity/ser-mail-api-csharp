@@ -13,27 +13,19 @@ namespace Proofpoint.SecureEmailRelay.Mail
     {
         public override Disposition Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            var stringValue = reader.GetString();
-            return stringValue switch
+            if (Enum.TryParse(typeof(Disposition), reader.GetString(), true, out var result))
             {
-                "inline" => Disposition.Inline,
-                "attachment" => Disposition.Attachment,
-                _ => throw new JsonException($"Invalid value for Disposition: {stringValue}")
-            };
+                return (Disposition)result!;
+            }
+            throw new JsonException($"Invalid value for Disposition: {reader.GetString()}");
         }
 
         public override void Write(Utf8JsonWriter writer, Disposition value, JsonSerializerOptions options)
         {
-            var stringValue = value switch
-            {
-                Disposition.Inline => "inline",
-                Disposition.Attachment => "attachment",
-                _ => throw new ArgumentOutOfRangeException(nameof(value), $"Invalid Disposition value: {value}")
-            };
-
-            writer.WriteStringValue(stringValue);
+            writer.WriteStringValue(value.ToString().ToLower());
         }
     }
+
     public sealed class Attachment
     {
         [JsonPropertyName("content")]
@@ -80,8 +72,8 @@ namespace Proofpoint.SecureEmailRelay.Mail
         {
         }
 
-        public static AttachmentBuilder CreateBuilder() => new AttachmentBuilder();
-        public static AttachmentBuilder CreateBuilder(IMimeTypeMapper mimeTypeMapper) => new AttachmentBuilder(mimeTypeMapper);
+        public static ISourceStep Builder() => new AttachmentBuilder();
+        public static ISourceStep Builder(IMimeTypeMapper mimeTypeMapper) => new AttachmentBuilder(mimeTypeMapper);
         public override string ToString() => JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
     }
 

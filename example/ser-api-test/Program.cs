@@ -44,23 +44,27 @@ message.AddBcc(new MailUser("bcc_recipient2@proofpoint.com", "Blind Carbon Copy 
 message.AddReplyTo(new MailUser("reply_to1@proofpoint.com", "Reply To 1"));
 message.AddReplyTo(new MailUser("reply_to2@proofpoint.com", "Reply To 2"));
 
-// Add Base64 empty attachment, this currently doesn't work with the REST API.
-// message.AddAttachment(Attachment.CreateBuilder().FromBase64("").SetFilename("empty.txt").SetMimeType("text/plain").Build());
-
-// Add Base64 encoded attachment
-message.AddAttachment(Attachment.CreateBuilder().FromBase64("VGhpcyBpcyBhIHRlc3Qh").SetFilename("empty.txt").SetMimeType("text/plain").Build());
 
 // Add file attachment from disk, if disposition is not passed, the default is Disposition.Attachment
-message.AddAttachment(Attachment.CreateBuilder().FromFile(@"C:\temp\file.csv").SetDisposition(Disposition.Inline).Build());
+// message.AddAttachment(Attachment.Builder().File(@"C:\temp\empty.txt").Build());
+
+// Add Base64 empty attachment, this currently doesn't work with the REST API.
+// message.AddAttachment(Attachment.Builder().Base64("").Name("empty.txt").Mime("text/plain").Build());
+
+// Add Base64 encoded attachment
+message.AddAttachment(Attachment.Builder().Base64("VGhpcyBpcyBhIHRlc3Qh").Name("empty.txt").Mime("text/plain").Build());
+
+// Add file attachment from disk, if disposition is not passed, the default is Disposition.Attachment
+message.AddAttachment(Attachment.Builder().File(@"C:\temp\file.csv").Inline().Build());
 
 // Convert the string to a byte array using UTF8 encoding
 byte[] bytes = Encoding.UTF8.GetBytes("This is a sample text stream.");
 
 // Add byte array as attachment, if disposition is not passed, the default is Disposition.Attachment
-message.AddAttachment(Attachment.CreateBuilder().FromBytes(bytes).SetFilename("bytes.txt").SetMimeType("text/plain").Build());
+message.AddAttachment(Attachment.Builder().Bytes(bytes).Name("bytes.txt").Mime("text/plain").Build());
 
 // Add empty attachment, this currently doesn't work with the REST API. 
-// message.AddAttachment(Attachment.CreateBuilder().FromBytes(Array.Empty<byte>()).SetFilename("nobytes.txt").SetMimeType("text/plain").Build());
+// message.AddAttachment(Attachment.Builder().Bytes(Array.Empty<byte>()).Name("nobytes.txt").Mime("text/plain").Inline().CId("WizBangContentId").Build());
 
 // Print Message object as JSON text
 Console.WriteLine(message.ToString());
