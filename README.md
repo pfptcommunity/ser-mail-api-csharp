@@ -1,229 +1,145 @@
 # Proofpoint Secure Email Relay Mail API Package
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Proofpoint.SecureEmailRelay.Mail.svg)](https://www.nuget.org/packages/Proofpoint.SecureEmailRelay.Mail)  
-Library implements all the functions of the SER Email Relay API via C#.
 
-### Requirements:
+This library implements all the functions of the SER Email Relay API via **C#**.
 
-* .NET 6.0
+## Requirements
 
-### Sending an Email Message
+- **.NET 6.0+**
+- **HttpClient** (built-in in .NET)
+- Active **Proofpoint SER API credentials**
 
-```C#
-using Proofpoint.SecureEmailRelay.Mail;
-using System.Text;
+### Installing the Package
 
-Client client = new("<client_id>", "<client_secret>");
+You can install the library using **NuGet**:
 
-// Create a new Message object
-Message message = new("This is a test email", new MailUser("sender@proofpoint.com", "Joe Sender"));
+```bash
+# Using .NET CLI
+dotnet add package Proofpoint.SecureEmailRelay.Mail
 
-// Add content body
-message.AddContent(new Content("This is a test message", ContentType.Text));
-message.AddContent(new Content("<b>This is a test message</b>", ContentType.Html));
-
-// Add To
-message.AddTo(new MailUser("to_recipient1@proofpoint.com", "Recipient 1"));
-message.AddTo(new MailUser("to_recipient2@proofpoint.com", "Recipient 2"));
-
-// Add CC
-message.AddCc(new MailUser("cc_recipient1@proofpoint.com", "Carbon Copy 1"));
-message.AddCc(new MailUser("cc_recipient2@proofpoint.com", "Carbon Copy 2"));
-
-// Add BCC
-message.AddBcc(new MailUser("bcc_recipient2@proofpoint.com", "Blind Carbon Copy 1"));
-message.AddBcc(new MailUser("bcc_recipient2@proofpoint.com", "Blind Carbon Copy 2"));
-
-// Reply To
-message.AddReplyTo(new MailUser("reply_to1@proofpoint.com", "Reply To 1"));
-message.AddReplyTo(new MailUser("reply_to2@proofpoint.com", "Reply To 2"));
-
-// Add Base64 empty attachment, this currently doesn't work with the REST API.
-// message.AddAttachment(Attachment.FromBase64String("", "empty.txt", "text/plain", Disposition.Attachment));
-
-// Add Base64 encoded attachment
-message.AddAttachment(Attachment.FromBase64String("VGhpcyBpcyBhIHRlc3Qh", "test.txt", "text/plain", Disposition.Attachment));
-
-// Add file attachment from disk, if disposition is not passed, the default is Disposition.Attachment
-message.AddAttachment(Attachment.FromFile(@"C:\temp\file.csv", Disposition.Attachment));
-
-// Convert the string to a byte array using UTF8 encoding
-byte[] bytes = Encoding.UTF8.GetBytes("This is a sample text stream.");
-
-// Add byte array as attachment, if disposition is not passed, the default is Disposition.Attachment
-message.AddAttachment(Attachment.FromBytes(bytes, "bytes.txt", "text/plain", Disposition.Attachment));
-
-// Add empty attachment, this currently doesn't work with the REST API. 
-// message.AddAttachment(Attachment.FromBytes(Array.Empty<byte>(), "nobytes.txt", "text/plain", Disposition.Attachment));
-
-// Print Message object as JSON text
-Console.WriteLine(message.ToString());
-
-SendResult sendResult = await client.Send(message);
-
-Console.WriteLine($"Status Code: {(int)sendResult.HttpResponse.StatusCode} {sendResult.HttpResponse.StatusCode}");
-Console.WriteLine($"Message ID: {sendResult.MessageId}");
-Console.WriteLine($"Reason: {sendResult.Reason}");
-Console.WriteLine($"Request ID: {sendResult.RequestId}");
-Console.WriteLine($"Raw JSON: {sendResult.RawJson}");
+# Using NuGet Package Manager
+Install-Package Proofpoint.SecureEmailRelay.Mail
 ```
 
-The following JSON data is a dump of the message object based on the code above.
+## Features
 
-```json
-{
-  "attachments": [
-    {
-      "content": "",
-      "disposition": "attachment",
-      "filename": "empty.txt",
-      "id": "2fa8a8cd-7661-4bfe-8a9b-2c1dde469206",
-      "type": "text/plain"
-    },
-    {
-      "content": "VGhpcyBpcyBhIHRlc3Qh",
-      "disposition": "attachment",
-      "filename": "test.txt",
-      "id": "9adcbd55-325c-4f74-ad5b-6fe5fbefd3b0",
-      "type": "text/plain"
-    },
-    {
-      "content": "77u/IlVzZXIiLCJTZW50Q291bnQiLCJSZWNlaXZlZENvdW50Ig0KIm5vcmVwbHlAcHJvb2Zwb2ludC5jb20sIGxqZXJhYmVrQHBmcHQuaW8iLCIwIiwiMCINCg==",
-      "disposition": "attachment",
-      "filename": "file.csv",
-      "id": "a43a0f62-02ac-4631-bb6d-ec1518b8b57c",
-      "type": "text/csv"
-    },
-    {
-      "content": "VGhpcyBpcyBhIHNhbXBsZSB0ZXh0IHN0cmVhbS4=",
-      "disposition": "attachment",
-      "filename": "bytes.txt",
-      "id": "7a0c7928-0d14-456a-81d8-01e4169964f2",
-      "type": "text/plain"
-    },
-    {
-      "content": "",
-      "disposition": "attachment",
-      "filename": "nobytes.txt",
-      "id": "b9dddb78-6448-4b7b-b766-a922e58d9ddf",
-      "type": "text/plain"
-    }
-  ],
-  "content": [
-    {
-      "body": "This is a test message",
-      "type": "text/plain"
-    },
-    {
-      "body": "\u003Cb\u003EThis is a test message\u003C/b\u003E",
-      "type": "text/html"
-    }
-  ],
-  "from": {
-    "email": "sender@proofpoint.com",
-    "name": "Joe Sender"
-  },
-  "headers": {
-    "from": {
-      "email": "sender@proofpoint.com",
-      "name": "Joe Sender"
-    }
-  },
-  "subject": "This is a test email",
-  "tos": [
-    {
-      "email": "to_recipient1@proofpoint.com",
-      "name": "Recipient 1"
-    },
-    {
-      "email": "to_recipient2@proofpoint.com",
-      "name": "Recipient 2"
-    }
-  ],
-  "cc": [
-    {
-      "email": "cc_recipient1@proofpoint.com",
-      "name": "Carbon Copy 1"
-    },
-    {
-      "email": "cc_recipient2@proofpoint.com",
-      "name": "Carbon Copy 2"
-    }
-  ],
-  "bcc": [
-    {
-      "email": "bcc_recipient2@proofpoint.com",
-      "name": "Blind Carbon Copy 1"
-    },
-    {
-      "email": "bcc_recipient2@proofpoint.com",
-      "name": "Blind Carbon Copy 2"
-    }
-  ],
-  "replyTos": [
-    {
-      "email": "reply_to1@proofpoint.com",
-      "name": "Reply To 1"
-    },
-    {
-      "email": "reply_to2@proofpoint.com",
-      "name": "Reply To 2"
-    }
-  ]
-}
-```
+- **Send Emails**: Easily compose and send emails with minimal code.
+- **Support for Attachments**:
+    - Attach files from disk
+    - Encode attachments as Base64
+    - Send `byte[]` attachments
+- **Support for Inline HTML Content**:
+    - Using the syntax `<img src="cid:logo">`
+    - Content-ID can be set manually or auto-generated
+- **HTML & Plain Text Content**: Supports both plain text and HTML email bodies.
+- **Recipient Management**: Add `To`, `CC`, and `BCC` recipients with ease.
+- **Reply Management**: Add `Reply-To` addresses to redirect replies.
 
-### Proxy Support
-
-`Proofpoint.SecureEmailRelay.Mail` supports HTTP and HTTPS proxies by allowing users to pass a custom `HttpClientHandler` when initializing the `Client`.
-
-To configure an HTTP(S) proxy, create a **custom `HttpClientHandler`** and pass it to the client:
+## Quick Start
 
 ```csharp
-using System.Net;
 using Proofpoint.SecureEmailRelay.Mail;
 
-// Configure an HTTP/HTTPS proxy
-var proxy = new WebProxy("http://your-proxy-server:port")
+class Program
 {
-    Credentials = new NetworkCredential("your-username", "your-password") // Optional authentication
-};
+    static async Task Main()
+    {
+        var client = new Client("<client_id>", "<client_secret>");
 
-var httpClientHandler = new HttpClientHandler
-{
-    Proxy = proxy,
-    UseProxy = true // Ensures proxy usage
-};
+        // Create a new Message object
+        var message = new Message("This is a test email", new MailUser("sender@example.com", "Joe Sender"));
 
-// Initialize the client with proxy support
-Client client = new("<client_id>", "<client_secret>", httpClientHandler);
-```
+        // Add text content body
+        message.AddContent(new Content("This is a test message", ContentType.Text));
 
-### Known Issues
+        // Add HTML content body, with embedded image
+        message.AddContent(new Content("<b>This is a test message</b><br><img src=\"cid:logo\">", ContentType.Html));
 
-I've reached out to product management regarding a possible bug caused by empty file content. Empty files should be allowed to be sent via email but the API currently will reject those messages. This is most likely a corner case but in the event a system generates an empty file, that file will be rejected by the REST endpoint. Below is an example of empty content.
+        // Create an inline attachment from disk and set the cid
+        message.AddAttachment(Attachment.FromFile("C:/temp/logo.png", Disposition.Inline, "logo"));
 
-```json
-{
-      "content": "",
-      "disposition": "attachment",
-      "filename": "empty.txt",
-      "id": "1ed38149-70b2-4476-84a1-83e73913d43c",
-      "type": "text/plain"
+        // Add recipients
+        message.AddTo(new MailUser("recipient1@example.com", "Recipient 1"));
+        message.AddTo(new MailUser("recipient2@example.com", "Recipient 2"));
+
+        // Add CC
+        message.AddCc(new MailUser("cc1@example.com", "CC Recipient 1"));
+        message.AddCc(new MailUser("cc2@example.com", "CC Recipient 2"));
+
+        // Add BCC
+        message.AddBcc(new MailUser("bcc1@example.com", "BCC Recipient 1"));
+        message.AddBcc(new MailUser("bcc2@example.com", "BCC Recipient 2"));
+
+        // Add attachments
+        message.AddAttachment(Attachment.FromBase64("VGhpcyBpcyBhIHRlc3Qh", "test.txt"));
+        message.AddAttachment(Attachment.FromFile("C:/temp/file.csv"));
+        message.AddAttachment(Attachment.FromBytes(new byte[] { 1, 2, 3 }, "bytes.txt", "text/plain"));
+
+        // Set Reply-To
+        message.AddReplyTo(new MailUser("noreply@proofpoint.com", "No Reply"));
+
+        // Send the email
+        var result = await client.Send(message);
+
+        Console.WriteLine($"HTTP Response: {result.Status}/{result.Reason}");
+        Console.WriteLine($"Message ID: {result.Reason}");
+        Console.WriteLine($"Message ID: {result.MessageId}");
+        Console.WriteLine($"Request ID: {result.RequestId}");
+    }
 }
 ```
 
-This type of content leads to an REST response with error.
+## Attachment MIME Type Deduction Behavior
 
+- When creating attachments, the library **automatically determines the MIME type** based on the file extension.
+- If the MIME type cannot be determined, an exception is raised.
+
+```csharp
+// Correct: MIME type is inferred
+Attachment.FromFile("C:/temp/file.csv");
+
+// Throws an error: Unknown MIME type
+Attachment.FromFile("C:/temp/file.unknown");
+
+// Specifying a MIME type manually
+Attachment.FromFile("C:/temp/file.unknown", mimeType: "text/plain");
 ```
-Status Code: 400 BadRequest
-Message ID:
-Reason: attachments[0].content is required
-Request ID: fe9a1acf60a20c9d90bed843f6530156
-Raw JSON: {"request_id":"fe9a1acf60a20c9d90bed843f6530156","reason":"attachments[0].content is required"}
+
+## Inline Attachments and Content-IDs
+
+To reference an inline attachment inside an HTML body, **set its `Disposition` to `Inline`** and use `cid:`.
+
+### Using a Dynamically Generated Content-ID
+```csharp
+var logo = Attachment.FromFile("C:/temp/logo.png", Disposition.Inline);
+message.AddContent(new Content($"<b>Test</b><br><img src=\"cid:{logo.ContentId}\">", ContentType.Html));
+message.AddAttachment(logo);
 ```
 
-### Limitations
+### Setting a Custom Content-ID
+```csharp
+message.AddAttachment(Attachment.FromFile("C:/temp/logo.png", Disposition.Inline, "logo"));
+message.AddContent(new Content("<b>Test</b><br><img src=\"cid:logo\">", ContentType.Html));
+```
 
-There are no known limitations.
+## Proxy Support
 
-For more information please see: https://api-docs.ser.proofpoint.com/docs/email-submission
+```csharp
+var clientHandler = new HttpClientHandler { Proxy = new WebProxy("http://proxyserver:3128") };
+var client = new Client("<client_id>", "<client_secret>", clientHandler);
+```
+
+## HTTP Timeout Settings
+
+```csharp
+client.HttpClient.Timeout = TimeSpan.FromSeconds(60);
+```
+
+## Known Issues
+- The Proofpoint API currently does not support **empty file attachments**.
+- If an empty file is sent, you will receive a **400 Bad Request** error.
+
+## Additional Resources
+For more information, refer to the official **Proofpoint Secure Email Relay API documentation**:  
+[**API Documentation**](https://api-docs.ser.proofpoint.com/docs/email-submission)
+
