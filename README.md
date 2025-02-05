@@ -95,22 +95,24 @@ class Program
 - If the MIME type cannot be determined, an exception is raised.
 
 ```csharp
-    // Create an attachment from disk; the MIME type will be "application/vnd.ms-excel", and disposition will be "Disposition.Attachment"
-    Attachment.FromFile("C:/temp/file.csv")
-    
-    // This will throw an error, as the MIME type is unknown
-    Attachment.FromFile("C:/temp/file.unknown")
-    
-    // Create an attachment and specify the type information. The disposition will be "Disposition.Attachment", filename will be unknown.txt, and MIME type "text/plain"
-    Attachment.FromFile("C:/temp/file.unknown", filename="unknown.txt")
-    
-    // Create an attachment and specify the type information. The disposition will be "Disposition.Attachment", filename will be file.unknown, and MIME type "text/plain"
-    Attachment.FromFile("C:/temp/file.unknown", mime_type="text/plain")
+// Create an attachment from disk; the MIME type will be "text/csv", and disposition will be "Disposition.Attachment"
+Attachment.FromFile("C:/temp/file.csv")
+
+// This will throw an error, as the MIME type is unknown
+Attachment.FromFile("C:/temp/file.unknown")
+
+// Create an attachment and specify the type information. The disposition will be "Disposition.Attachment", filename will be unknown.txt, and MIME type "text/plain"
+Attachment.FromFile("C:/temp/file.unknown", filename="unknown.txt")
+
+// Create an attachment and specify the type information. The disposition will be "Disposition.Attachment", filename will be file.unknown, and MIME type "text/plain"
+Attachment.FromFile("C:/temp/file.unknown", mime_type="text/plain")
 ```
 
 ## Inline Attachments and Content-IDs
 
-To reference an inline attachment inside an HTML body, **set its `Disposition` to `Inline`** and use `cid:`.
+When creating attachments, they are `Disposition.Attachment` by default. To properly reference a **Content-ID** (e.g.,
+`<img src="cid:logo">`), you must explicitly set the attachment disposition to `Disposition.Inline`.
+If the attachment type is set to `Disposition.Inline`, a default unique **Content-ID** will be generated.
 
 ### Using a Dynamically Generated Content-ID
 ```csharp
@@ -157,6 +159,32 @@ client.HttpClient.Timeout = TimeSpan.FromSeconds(60);
 ```
 
 ## Known Issues
+
+There is a known issue where **empty file content** results in a **400 Bad Request** error.
+
+```json
+{
+  "content": "",
+  "disposition": "attachment",
+  "filename": "empty.txt",
+  "id": "1ed38149-70b2-4476-84a1-83e73913d43c",
+  "type": "text/plain"
+}
+```
+
+🔹 **API Response:**
+
+```
+Status Code: 400/BadRequest
+Message ID:
+Reason: attachments[0].content is required
+Request ID: fe9a1acf60a20c9d90bed843f6530156
+Raw JSON: {"request_id":"fe9a1acf60a20c9d90bed843f6530156","reason":"attachments[0].content is required"}
+```
+
+This issue has been reported to **Proofpoint Product Management**.
+
+## Limitations
 - The Proofpoint API currently does not support **empty file attachments**.
 - If an empty file is sent, you will receive a **400 Bad Request** error.
 
