@@ -110,7 +110,7 @@ Attachment.FromFile("C:/temp/file.unknown", mime_type="text/plain")
 
 ## Inline Attachments and Content-IDs
 
-To reference an inline attachment inside an HTML body, **set its `Disposition` to `Inline`** and use `cid:`.
+When creating attachments, they are Disposition.Attachment by default. To properly reference a Content-ID (e.g., <img src="cid:logo">), you must explicitly set the attachment disposition to Disposition.Inline. If the attachment type is set to Disposition.Inline, a default unique Content-ID will be generated.
 
 ### Using a Dynamically Generated Content-ID
 ```csharp
