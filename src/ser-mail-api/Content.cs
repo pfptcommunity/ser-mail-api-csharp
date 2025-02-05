@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Proofpoint.SecureEmailRelay.Mail
@@ -16,9 +17,9 @@ namespace Proofpoint.SecureEmailRelay.Mail
             var stringValue = reader.GetString();
             return stringValue switch
             {
-                "inline" => ContentType.Text,
-                "attachment" => ContentType.Html,
-                _ => throw new JsonException($"Invalid value for ContentType: {stringValue}")
+                "text" => ContentType.Text,
+                "html" => ContentType.Html,
+                _ => throw new JsonException($"Invalid ContentType value: '{stringValue}'.")
             };
         }
 
@@ -28,7 +29,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
             {
                 ContentType.Text => "text/plain",
                 ContentType.Html => "text/html",
-                _ => throw new ArgumentOutOfRangeException(nameof(value), $"Invalid ContentType value: {value}")
+                _ => throw new ArgumentOutOfRangeException(nameof(value), $"Invalid ContentType value: '{value}'.")
             };
 
             writer.WriteStringValue(stringValue);
@@ -37,24 +38,34 @@ namespace Proofpoint.SecureEmailRelay.Mail
 
     public sealed class Content
     {
-        private string _body = string.Empty;
+        private string _body = null!;
 
         [JsonPropertyName("body")]
         public string Body
         {
             get => _body;
-            set => _body = value ?? throw new ArgumentNullException(nameof(value), "Body cannot be null.");
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value), "Body must not be null.");
+
+                if (string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentException("Body must not be empty or contain only whitespace.", nameof(value));
+
+                _body = value;
+            }
         }
 
         [JsonPropertyName("type")]
         [JsonConverter(typeof(ContentTypeJsonConverter))]
-        public ContentType ContentType { get; set; }
+        public ContentType ContentType { get; }
 
         public Content(string body, ContentType contentType)
         {
-            Body = body;
             ContentType = contentType;
+            Body = body;
         }
+
         public override string ToString()
         {
             return JsonSerializer.Serialize(this, new JsonSerializerOptions
