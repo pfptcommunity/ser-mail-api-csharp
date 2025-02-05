@@ -1,11 +1,24 @@
-﻿using System.Text.Json.Serialization;
+﻿using System;
+using System.Text.Json.Serialization;
 
 namespace Proofpoint.SecureEmailRelay.Mail
 {
-    sealed public class MessageHeaders
+    public sealed class MessageHeaders
     {
+        private MailUser _from = null!;
+
         [JsonPropertyName("from")]
-        public MailUser From { get; set; }
+        public MailUser From
+        {
+            get => _from;
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value), "Header from address must not be null.");
+
+                _from = value;
+            }
+        }
 
         public MessageHeaders(MailUser from)
         {
