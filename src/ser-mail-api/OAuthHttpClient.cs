@@ -1,6 +1,10 @@
 ﻿using IdentityModel.Client;
+using System;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Proofpoint.SecureEmailRelay.Mail
 {
@@ -14,14 +18,14 @@ namespace Proofpoint.SecureEmailRelay.Mail
 
         public OAuthHttpClient(ClientCredentialsTokenRequest clientCredentials)
         {
-            _clientCredentials = clientCredentials ?? throw new ArgumentNullException(nameof(clientCredentials));
+            _clientCredentials = clientCredentials ?? throw new ArgumentNullException(nameof(clientCredentials), "Client credentials must not be null.");
             HttpClient = new HttpClient();
         }
 
         public OAuthHttpClient(HttpClient httpClient, ClientCredentialsTokenRequest clientCredentials)
         {
-            _clientCredentials = clientCredentials ?? throw new ArgumentNullException(nameof(clientCredentials));
-            HttpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+            _clientCredentials = clientCredentials ?? throw new ArgumentNullException(nameof(clientCredentials), "Client credentials must not be null.");
+            HttpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient), "HttpClient instance must not be null.");
         }
 
         private async Task EnsureTokenAsync()
@@ -31,12 +35,12 @@ namespace Proofpoint.SecureEmailRelay.Mail
                 return;
             }
 
-            await _tokenSemaphore.WaitAsync();
+            await _tokenSemaphore.WaitAsync().ConfigureAwait(false);
             try
             {
                 if (string.IsNullOrEmpty(_accessToken) || !_tokenExpiration.HasValue || DateTime.UtcNow >= _tokenExpiration.Value)
                 {
-                    await RefreshTokenAsync();
+                    await RefreshTokenAsync().ConfigureAwait(false);
                 }
             }
             finally
@@ -47,18 +51,18 @@ namespace Proofpoint.SecureEmailRelay.Mail
 
         private async Task RefreshTokenAsync()
         {
-            var tokenResponse = await HttpClient.RequestClientCredentialsTokenAsync(_clientCredentials);
+            var tokenResponse = await HttpClient.RequestClientCredentialsTokenAsync(_clientCredentials).ConfigureAwait(false);
 
             if (tokenResponse.IsError)
             {
-                throw new HttpRequestException($"Failed to retrieve access token: {tokenResponse.Error}");
+                throw new HttpRequestException($"OAuth token request failed: {tokenResponse.Error}");
             }
 
-            _accessToken = tokenResponse.AccessToken;
+            _accessToken = tokenResponse.AccessToken ?? throw new InvalidOperationException("OAuth token response did not contain an access token.");
 
             if (tokenResponse.HttpResponse is not null)
             {
-                var responseContent = await tokenResponse.HttpResponse.Content.ReadAsStringAsync();
+                var responseContent = await tokenResponse.HttpResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
 
                 try
                 {
@@ -75,60 +79,69 @@ namespace Proofpoint.SecureEmailRelay.Mail
                     }
                     else
                     {
-                        throw new InvalidOperationException("The token response does not contain expiration details.");
+                        throw new InvalidOperationException("OAuth token response is missing expiration details.");
                     }
                 }
                 catch (JsonException ex)
                 {
-                    throw new InvalidOperationException("Failed to parse token expiration details.", ex);
+                    throw new InvalidOperationException("Error parsing OAuth token expiration details from response.", ex);
                 }
             }
         }
 
         private HttpRequestMessage CreateRequest(HttpMethod method, string requestUri, HttpContent? content = null)
         {
-            var request = new HttpRequestMessage(method, requestUri);
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
-            if (content is not null)
+            if (string.IsNullOrWhiteSpace(requestUri))
+                throw new ArgumentNullException(nameof(requestUri), "Request URI must not be null, empty, or contain only whitespace.");
+
+            var request = new HttpRequestMessage(method, requestUri)
             {
-                request.Content = content;
-            }
+                Content = content
+            };
+
+            if (string.IsNullOrEmpty(_accessToken))
+                throw new InvalidOperationException("Access token is missing. Ensure authentication before making a request.");
+
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
             return request;
         }
 
         public async Task<HttpResponseMessage> GetAsync(string requestUri, CancellationToken cancellationToken = default)
         {
-            await EnsureTokenAsync();
+            await EnsureTokenAsync().ConfigureAwait(false);
             var request = CreateRequest(HttpMethod.Get, requestUri);
-            return await HttpClient.SendAsync(request, cancellationToken);
+            return await HttpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<HttpResponseMessage> PostAsync(string requestUri, HttpContent content, CancellationToken cancellationToken = default)
         {
-            await EnsureTokenAsync();
+            await EnsureTokenAsync().ConfigureAwait(false);
             var request = CreateRequest(HttpMethod.Post, requestUri, content);
-            return await HttpClient.SendAsync(request, cancellationToken);
+            return await HttpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<HttpResponseMessage> PutAsync(string requestUri, HttpContent content, CancellationToken cancellationToken = default)
         {
-            await EnsureTokenAsync();
+            await EnsureTokenAsync().ConfigureAwait(false);
             var request = CreateRequest(HttpMethod.Put, requestUri, content);
-            return await HttpClient.SendAsync(request, cancellationToken);
+            return await HttpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<HttpResponseMessage> DeleteAsync(string requestUri, CancellationToken cancellationToken = default)
         {
-            await EnsureTokenAsync();
+            await EnsureTokenAsync().ConfigureAwait(false);
             var request = CreateRequest(HttpMethod.Delete, requestUri);
-            return await HttpClient.SendAsync(request, cancellationToken);
+            return await HttpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken = default)
         {
-            await EnsureTokenAsync();
+            if (request == null)
+                throw new ArgumentNullException(nameof(request), "HTTP request must not be null.");
+
+            await EnsureTokenAsync().ConfigureAwait(false);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
-            return await HttpClient.SendAsync(request, cancellationToken);
+            return await HttpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         }
     }
 }
