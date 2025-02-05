@@ -1021,28 +1021,37 @@ namespace Proofpoint.SecureEmailRelay.Mail
         public string GetMimeType(string fileName)
         {
             if (string.IsNullOrWhiteSpace(fileName))
-                return AllowFallbackMimeType ? DefaultMimeType : throw new ArgumentException("File name cannot be null or empty.", nameof(fileName));
+                throw new ArgumentNullException(nameof(fileName), "File name must not be null, empty, or contain only whitespace.");
 
             string? extension = Path.GetExtension(fileName)?.TrimStart('.').ToLower();
 
             if (string.IsNullOrWhiteSpace(extension))
-                return AllowFallbackMimeType ? DefaultMimeType : throw new ArgumentException("File extension could not be determined.", nameof(fileName));
+                throw new ArgumentException($"File extension could not be determined from '{fileName}'.", nameof(fileName));
 
             if (_mimeTypeMap.TryGetValue(extension, out string? lookupResult))
                 return lookupResult!;
 
-            return AllowFallbackMimeType ? DefaultMimeType : throw new ArgumentException($"MIME type could not be determined for '{fileName}'. Provide a MIME type explicitly or allow fallback.");
+            if (AllowFallbackMimeType)
+                return DefaultMimeType;
+
+            throw new ArgumentException($"MIME type could not be determined for '{fileName}'. Provide a MIME type explicitly or enable fallback.");
         }
 
         public bool IsValidMimeType(string mimeType)
         {
+            if (string.IsNullOrWhiteSpace(mimeType))
+                throw new ArgumentNullException(nameof(mimeType), "MIME type must not be null, empty, or contain only whitespace.");
+
             return _mimeTypes.Contains(mimeType) || AllowUnknownMimeType;
         }
 
         public bool AddOrUpdateMimeType(string extension, string mimeType)
         {
-            if (string.IsNullOrWhiteSpace(extension) || string.IsNullOrWhiteSpace(mimeType))
-                throw new ArgumentException("Extension and MIME type must be non-empty strings.");
+            if (string.IsNullOrWhiteSpace(extension))
+                throw new ArgumentNullException(nameof(extension), "Extension must not be null, empty, or contain only whitespace.");
+
+            if (string.IsNullOrWhiteSpace(mimeType))
+                throw new ArgumentNullException(nameof(mimeType), "MIME type must not be null, empty, or contain only whitespace.");
 
             extension = extension.TrimStart('.').ToLower();
 
