@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Net.Mail;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Proofpoint.SecureEmailRelay.Mail
@@ -56,7 +53,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
         [JsonIgnore]
         public string? Id => ContentId;
 
-        [JsonPropertyName("id")] 
+        [JsonPropertyName("id")]
         public string? ContentId { get; }
 
 
