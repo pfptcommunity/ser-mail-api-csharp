@@ -10,13 +10,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
         public MailUser From
         {
             get => _from;
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException(nameof(value), "Header from address must not be null.");
-
-                _from = value;
-            }
+            set => _from = value ?? throw new ArgumentNullException(nameof(value), "Header from address must not be null.");
         }
 
         public MessageHeaders(MailUser from)
