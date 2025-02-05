@@ -53,6 +53,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
         [JsonIgnore]
         public string? Id => ContentId;
 
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         [JsonPropertyName("id")]
         public string? ContentId { get; }
 
@@ -160,11 +161,12 @@ namespace Proofpoint.SecureEmailRelay.Mail
 
         public static Attachment FromBytes(byte[] data, string filename, string mimeType, Disposition disposition = Disposition.Attachment)
         {
-            if (data == null || data.Length == 0)
-                throw new ArgumentException("Byte array must contain data.", nameof(data));
+            if (data == null)
+                throw new ArgumentNullException(nameof(data), "Byte array must not be null.");
 
             return new Attachment(Convert.ToBase64String(data), filename, mimeType, disposition);
         }
+
 
         private static bool TryDecodeBase64(string base64String, out byte[]? decodedBytes)
         {
