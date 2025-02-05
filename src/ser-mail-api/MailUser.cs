@@ -1,4 +1,5 @@
-﻿using System.Net.Mail;
+﻿using System;
+using System.Net.Mail;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -6,7 +7,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
 {
     public class MailUser
     {
-        private string _email;
+        private string _email = null!;
 
         [JsonPropertyName("email")]
         public string Email
@@ -14,8 +15,11 @@ namespace Proofpoint.SecureEmailRelay.Mail
             get => _email;
             set
             {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value), "Email must not be null.");
+
                 if (string.IsNullOrWhiteSpace(value))
-                    throw new ArgumentException("Email address cannot be null or empty.", nameof(value));
+                    throw new ArgumentException("Email must not be empty or contain only whitespace.", nameof(value));
 
                 ValidateEmail(value);
                 _email = value;
@@ -48,9 +52,9 @@ namespace Proofpoint.SecureEmailRelay.Mail
             {
                 _ = new MailAddress(email);
             }
-            catch (FormatException)
+            catch (FormatException ex)
             {
-                throw new ArgumentException("Invalid email format", nameof(email));
+                throw new ArgumentException($"Invalid email format: '{email}'.", nameof(email), ex);
             }
         }
     }
