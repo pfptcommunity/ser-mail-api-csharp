@@ -95,14 +95,17 @@ class Program
 - If the MIME type cannot be determined, an exception is raised.
 
 ```csharp
-// Correct: MIME type is inferred
-Attachment.FromFile("C:/temp/file.csv");
-
-// Throws an error: Unknown MIME type
-Attachment.FromFile("C:/temp/file.unknown");
-
-// Specifying a MIME type manually
-Attachment.FromFile("C:/temp/file.unknown", mimeType: "text/plain");
+    // Create an attachment from disk; the MIME type will be "application/vnd.ms-excel", and disposition will be "Disposition.Attachment"
+    Attachment.FromFile("C:/temp/file.csv")
+    
+    // This will throw an error, as the MIME type is unknown
+    Attachment.FromFile("C:/temp/file.unknown")
+    
+    // Create an attachment and specify the type information. The disposition will be "Disposition.Attachment", filename will be unknown.txt, and MIME type "text/plain"
+    Attachment.FromFile("C:/temp/file.unknown", filename="unknown.txt")
+    
+    // Create an attachment and specify the type information. The disposition will be "Disposition.Attachment", filename will be file.unknown, and MIME type "text/plain"
+    Attachment.FromFile("C:/temp/file.unknown", mime_type="text/plain")
 ```
 
 ## Inline Attachments and Content-IDs
@@ -122,12 +125,30 @@ message.AddAttachment(Attachment.FromFile("C:/temp/logo.png", Disposition.Inline
 message.AddContent(new Content("<b>Test</b><br><img src=\"cid:logo\">", ContentType.Html));
 ```
 
-## Proxy Support
+### Proxy Support
+
+`Proofpoint.SecureEmailRelay.Mail` supports HTTP and HTTPS proxies by allowing users to pass a custom `HttpClientHandler` when initializing the `Client`.
+
+To configure an HTTP(S) proxy, create a **custom `HttpClientHandler`** and pass it to the client:
 
 ```csharp
-var clientHandler = new HttpClientHandler { Proxy = new WebProxy("http://proxyserver:3128") };
-var client = new Client("<client_id>", "<client_secret>", clientHandler);
-```
+using System.Net;
+using Proofpoint.SecureEmailRelay.Mail;
+
+// Configure an HTTP/HTTPS proxy
+var proxy = new WebProxy("http://your-proxy-server:port")
+{
+    Credentials = new NetworkCredential("your-username", "your-password") // Optional authentication
+};
+
+var httpClientHandler = new HttpClientHandler
+{
+    Proxy = proxy,
+    UseProxy = true // Ensures proxy usage
+};
+
+// Initialize the client with proxy support
+Client client = new("<client_id>", "<client_secret>", httpClientHandler);
 
 ## HTTP Timeout Settings
 
