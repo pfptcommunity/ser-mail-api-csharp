@@ -95,17 +95,17 @@ class Program
 - If the MIME type cannot be determined, an exception is raised.
 
 ```csharp
-    // Create an attachment from disk; the MIME type will be "application/vnd.ms-excel", and disposition will be "Disposition.Attachment"
-    Attachment.FromFile("C:/temp/file.csv")
-    
-    // This will throw an error, as the MIME type is unknown
-    Attachment.FromFile("C:/temp/file.unknown")
-    
-    // Create an attachment and specify the type information. The disposition will be "Disposition.Attachment", filename will be unknown.txt, and MIME type "text/plain"
-    Attachment.FromFile("C:/temp/file.unknown", filename="unknown.txt")
-    
-    // Create an attachment and specify the type information. The disposition will be "Disposition.Attachment", filename will be file.unknown, and MIME type "text/plain"
-    Attachment.FromFile("C:/temp/file.unknown", mime_type="text/plain")
+// Create an attachment from disk; the MIME type will be "text/csv", and disposition will be "Disposition.Attachment"
+Attachment.FromFile("C:/temp/file.csv")
+
+// This will throw an error, as the MIME type is unknown
+Attachment.FromFile("C:/temp/file.unknown")
+
+// Create an attachment and specify the type information. The disposition will be "Disposition.Attachment", filename will be unknown.txt, and MIME type "text/plain"
+Attachment.FromFile("C:/temp/file.unknown", filename="unknown.txt")
+
+// Create an attachment and specify the type information. The disposition will be "Disposition.Attachment", filename will be file.unknown, and MIME type "text/plain"
+Attachment.FromFile("C:/temp/file.unknown", mime_type="text/plain")
 ```
 
 ## Inline Attachments and Content-IDs
