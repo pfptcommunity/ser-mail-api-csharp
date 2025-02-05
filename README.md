@@ -182,6 +182,8 @@ Request ID: fe9a1acf60a20c9d90bed843f6530156
 Raw JSON: {"request_id":"fe9a1acf60a20c9d90bed843f6530156","reason":"attachments[0].content is required"}
 ```
 
+This issue has been reported to **Proofpoint Product Management**.
+
 ## Limitations
 - The Proofpoint API currently does not support **empty file attachments**.
 - If an empty file is sent, you will receive a **400 Bad Request** error.
