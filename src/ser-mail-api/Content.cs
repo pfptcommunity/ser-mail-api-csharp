@@ -37,8 +37,14 @@ namespace Proofpoint.SecureEmailRelay.Mail
 
     public sealed class Content
     {
+        private string _body = string.Empty;
+
         [JsonPropertyName("body")]
-        public string Body { get; set; }
+        public string Body
+        {
+            get => _body;
+            set => _body = value ?? throw new ArgumentNullException(nameof(value), "Body cannot be null.");
+        }
 
         [JsonPropertyName("type")]
         [JsonConverter(typeof(ContentTypeJsonConverter))]
