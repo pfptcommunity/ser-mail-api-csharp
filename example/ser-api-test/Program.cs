@@ -1,5 +1,4 @@
 ﻿using Proofpoint.SecureEmailRelay.Mail;
-using System.Text;
 using System.Text.Json;
 
 // Read stashed API Key Data
@@ -20,54 +19,43 @@ else
     Environment.Exit(1);
 }
 
+
 // Create a new Message object
-Message message = new("This is a test email", new MailUser("sender@proofpoint.com", "Joe Sender"));
+var message = new Message("This is a test email", new MailUser("sender@example.com", "Joe Sender"));
 
-// Add content body
+// Add text content body
 message.AddContent(new Content("This is a test message", ContentType.Text));
-message.AddContent(new Content("<b>This is a test message</b>", ContentType.Html));
 
-// Add To
-message.AddTo(new MailUser("to_recipient1@proofpoint.com", "Recipient 1"));
-message.AddTo(new MailUser("to_recipient2@proofpoint.com", "Recipient 2"));
+// Add HTML content body, with embedded image
+message.AddContent(new Content("<b>This is a test message</b><br><img src=\"cid:logo\">", ContentType.Html));
+
+// Create an inline attachment from disk and set the cid
+message.AddAttachment(Attachment.FromFile("C:/temp/logo.png", Disposition.Inline, "logo"));
+
+// Add recipients
+message.AddTo(new MailUser("recipient1@example.com", "Recipient 1"));
+message.AddTo(new MailUser("recipient2@example.com", "Recipient 2"));
 
 // Add CC
-message.AddCc(new MailUser("cc_recipient1@proofpoint.com", "Carbon Copy 1"));
-message.AddCc(new MailUser("cc_recipient2@proofpoint.com", "Carbon Copy 2"));
+message.AddCc(new MailUser("cc1@example.com", "CC Recipient 1"));
+message.AddCc(new MailUser("cc2@example.com", "CC Recipient 2"));
 
 // Add BCC
-message.AddBcc(new MailUser("bcc_recipient2@proofpoint.com", "Blind Carbon Copy 1"));
-message.AddBcc(new MailUser("bcc_recipient2@proofpoint.com", "Blind Carbon Copy 2"));
+message.AddBcc(new MailUser("bcc1@example.com", "BCC Recipient 1"));
+message.AddBcc(new MailUser("bcc2@example.com", "BCC Recipient 2"));
 
-// Reply To
-message.AddReplyTo(new MailUser("reply_to1@proofpoint.com", "Reply To 1"));
-message.AddReplyTo(new MailUser("reply_to2@proofpoint.com", "Reply To 2"));
+// Add attachments
+message.AddAttachment(Attachment.FromBase64("", "test.txt"));
+message.AddAttachment(Attachment.FromFile("C:/temp/file.csv"));
+message.AddAttachment(Attachment.FromBytes(new byte[] { 1, 2, 3 }, "bytes.txt", "text/plain"));
 
-// Add Base64 empty attachment, this currently doesn't work with the REST API.
-message.AddAttachment(Attachment.FromBase64String("", "empty.txt", "text/plain", Disposition.Attachment));
+// Set Reply-To
+message.AddReplyTo(new MailUser("noreply@proofpoint.com", "No Reply"));
 
-// Add Base64 encoded attachment
-message.AddAttachment(Attachment.FromBase64String("VGhpcyBpcyBhIHRlc3Qh", "test.txt", "text/plain", Disposition.Attachment));
+// Send the email
+var result = await client.Send(message);
 
-// Add file attachment from disk, if disposition is not passed, the default is Disposition.Attachment
-message.AddAttachment(Attachment.FromFile(@"C:\temp\file.csv", Disposition.Attachment));
-
-// Convert the string to a byte array using UTF8 encoding
-byte[] bytes = Encoding.UTF8.GetBytes("This is a sample text stream.");
-
-// Add byte array as attachment, if disposition is not passed, the default is Disposition.Attachment
-message.AddAttachment(Attachment.FromBytes(bytes, "bytes.txt", "text/plain", Disposition.Attachment));
-
-// Add empty attachment, this currently doesn't work with the REST API. 
-message.AddAttachment(Attachment.FromBytes(Array.Empty<byte>(), "nobytes.txt", "text/plain", Disposition.Attachment));
-
-// Print Message object as JSON text
-Console.WriteLine(message.ToString());
-
-SendResult sendResult = await client.Send(message);
-
-Console.WriteLine($"Status Code: {(int)sendResult.HttpResponse.StatusCode} {sendResult.HttpResponse.StatusCode}");
-Console.WriteLine($"Message ID: {sendResult.MessageId}");
-Console.WriteLine($"Reason: {sendResult.Reason}");
-Console.WriteLine($"Request ID: {sendResult.RequestId}");
-Console.WriteLine($"Raw JSON: {sendResult.RawJson}");
+Console.WriteLine($"HTTP Response: {result.HttpResponse.StatusCode}/{(int)result.HttpResponse.StatusCode}");
+Console.WriteLine($"Message ID: {result.Reason}");
+Console.WriteLine($"Message ID: {result.MessageId}");
+Console.WriteLine($"Request ID: {result.RequestId}");
