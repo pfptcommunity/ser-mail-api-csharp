@@ -159,6 +159,30 @@ client.HttpClient.Timeout = TimeSpan.FromSeconds(60);
 ```
 
 ## Known Issues
+
+There is a known issue where **empty file content** results in a **400 Bad Request** error.
+
+```json
+{
+  "content": "",
+  "disposition": "attachment",
+  "filename": "empty.txt",
+  "id": "1ed38149-70b2-4476-84a1-83e73913d43c",
+  "type": "text/plain"
+}
+```
+
+🔹 **API Response:**
+
+```
+Status Code: 400/BadRequest
+Message ID:
+Reason: attachments[0].content is required
+Request ID: fe9a1acf60a20c9d90bed843f6530156
+Raw JSON: {"request_id":"fe9a1acf60a20c9d90bed843f6530156","reason":"attachments[0].content is required"}
+```
+
+## Limitations
 - The Proofpoint API currently does not support **empty file attachments**.
 - If an empty file is sent, you will receive a **400 Bad Request** error.
 
