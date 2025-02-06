@@ -96,16 +96,16 @@ class Program
 
 ```csharp
 // Create an attachment from disk; the MIME type will be "text/csv", and disposition will be "Disposition.Attachment"
-Attachment.FromFile("C:/temp/file.csv")
+Attachment.FromFile("C:/temp/file.csv");
 
 // This will throw an error, as the MIME type is unknown
-Attachment.FromFile("C:/temp/file.unknown")
+Attachment.FromFile("C:/temp/file.unknown");
 
 // Create an attachment and specify the type information. The disposition will be "Disposition.Attachment", filename will be unknown.txt, and MIME type "text/plain"
-Attachment.FromFile("C:/temp/file.unknown", filename="unknown.txt")
+Attachment.FromFile("C:/temp/file.unknown", filename: "unknown.txt");
 
 // Create an attachment and specify the type information. The disposition will be "Disposition.Attachment", filename will be file.unknown, and MIME type "text/plain"
-Attachment.FromFile("C:/temp/file.unknown", mime_type="text/plain")
+Attachment.FromFile("C:/temp/file.unknown", mimeType: "text/plain");
 ```
 
 ## Inline Attachments and Content-IDs
