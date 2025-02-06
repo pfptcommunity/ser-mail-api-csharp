@@ -1,6 +1,8 @@
-﻿using IdentityModel.Client;
+﻿using System;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace Proofpoint.SecureEmailRelay.Mail
 {
@@ -13,28 +15,63 @@ namespace Proofpoint.SecureEmailRelay.Mail
 
         public Client(string clientId, string clientSecret, HttpClientHandler httpClientHandler)
         {
-            var request = new ClientCredentialsTokenRequest
-            {
-                ClientCredentialStyle = ClientCredentialStyle.PostBody,
-                Address = "https://mail.ser.proofpoint.com/v1/token",
-                ClientId = clientId,
-                ClientSecret = clientSecret,
-            };
+            // Validate parameters
+            if (string.IsNullOrWhiteSpace(clientId))
+                throw new ArgumentException("Client ID must not be null or empty.", nameof(clientId));
+            if (string.IsNullOrWhiteSpace(clientSecret))
+                throw new ArgumentException("Client Secret must not be null or empty.", nameof(clientSecret));
+            if (httpClientHandler == null)
+                throw new ArgumentNullException(nameof(httpClientHandler), "HttpClientHandler must not be null.");
 
-            httpClient = new OAuthHttpClient(new HttpClient(httpClientHandler), request);
-            httpClient.HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd("CSharp-SER-API/1.0");
-            httpClient.HttpClient.BaseAddress = new Uri("https://mail.ser.proofpoint.com/v1/");
+            try
+            {
+                httpClient = new OAuthHttpClient(
+                    "https://mail.ser.proofpoint.com/v1/token",
+                    clientId,
+                    clientSecret,
+                    "",
+                    new HttpClient(httpClientHandler)
+                );
+
+                httpClient.HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd("CSharp-SER-API/1.0");
+                httpClient.HttpClient.BaseAddress = new Uri("https://mail.ser.proofpoint.com/v1/");
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Failed to initialize the Proofpoint SER API client.", ex);
+            }
         }
 
         public async Task<SendResult> Send(Message message)
         {
-            var json = JsonSerializer.Serialize(message);
+            if (message == null)
+                throw new ArgumentNullException(nameof(message), "Message must not be null.");
+
+            string json;
+            try
+            {
+                json = JsonSerializer.Serialize(message);
+            }
+            catch (JsonException ex)
+            {
+                throw new InvalidOperationException("Failed to serialize the message to JSON.", ex);
+            }
 
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            HttpResponseMessage response = await httpClient.PostAsync("send", content);
-
-            return await SendResult.CreateAsync(response);
+            try
+            {
+                HttpResponseMessage response = await httpClient.PostAsync("send", content);
+                return await SendResult.CreateAsync(response);
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new InvalidOperationException("Failed to send the email request due to an HTTP error.", ex);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("An unexpected error occurred while sending the email request.", ex);
+            }
         }
     }
 }
