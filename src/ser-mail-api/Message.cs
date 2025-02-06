@@ -43,7 +43,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
                 {
                     Headers = null;
                 }
-                else if(Headers == null)
+                else if (Headers == null)
                 {
                     Headers = new MessageHeaders(value);
                 }
