@@ -123,28 +123,9 @@ namespace Proofpoint.SecureEmailRelay.Mail
             MimeType = mimeType;
         }
 
-
-        // Factory Methods
-        [Obsolete]
-        public static Attachment FromBase64String(string base64Content, string filename, string mimeType, Disposition disposition = Disposition.Attachment, bool validateMimeType = true)
-        {
-            if (validateMimeType && !MimeTypeMapper.IsValidMimeType(mimeType))
-                throw new ArgumentException($"Invalid MIME type: '{mimeType}'. Disable MIME type validation to allow.", nameof(mimeType));
-
-            return new Attachment(base64Content, filename, mimeType, disposition);
-        }
-
         public static Attachment FromBase64(string base64Content, string filename, string? mimeType = null, Disposition disposition = Disposition.Attachment, string? contentId = null)
             => new(base64Content, filename, mimeType, disposition, contentId);
 
-        [Obsolete]
-        public static Attachment FromFile(string filePath, string mimeType, Disposition disposition = Disposition.Attachment, bool validateMimeType = true)
-        {
-            if (validateMimeType && !MimeTypeMapper.IsValidMimeType(mimeType))
-                throw new ArgumentException($"Invalid MIME type: '{mimeType}'. Disable MIME type validation to allow.", nameof(mimeType));
-
-            return FromFile(filePath, disposition, mimeType: mimeType);
-        }
 
         public static Attachment FromFile(string filePath, Disposition disposition = Disposition.Attachment, string? contentId = null, string? filename = null, string? mimeType = null)
         {

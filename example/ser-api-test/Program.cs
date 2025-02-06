@@ -45,7 +45,7 @@ message.AddBcc(new MailUser("bcc1@example.com", "BCC Recipient 1"));
 message.AddBcc(new MailUser("bcc2@example.com", "BCC Recipient 2"));
 
 // Add attachments
-message.AddAttachment(Attachment.FromBase64("", "test.txt"));
+message.AddAttachment(Attachment.FromBase64("VGhpcyBpcyBhIHRlc3Qh", "test.txt"));
 message.AddAttachment(Attachment.FromFile("C:/temp/file.csv"));
 message.AddAttachment(Attachment.FromBytes(new byte[] { 1, 2, 3 }, "bytes.txt", "text/plain"));
 
