@@ -5,6 +5,8 @@ namespace Proofpoint.SecureEmailRelay.Mail
 {
     internal class OAuthHttpClient : IHttpClient
     {
+        private readonly int _tokenRefreshOffset;
+
         public HttpClient HttpClient { get; }
         private readonly string _tokenEndpoint;
         private readonly string _clientId;
@@ -15,21 +17,26 @@ namespace Proofpoint.SecureEmailRelay.Mail
         private DateTime? _tokenExpiration;
         private readonly SemaphoreSlim _tokenSemaphore = new(1, 1);
 
-        public OAuthHttpClient(string tokenEndpoint, string clientId, string clientSecret, string scope)
-            : this(tokenEndpoint, clientId, clientSecret, scope, new HttpClient()) { }
+        public OAuthHttpClient(string tokenEndpoint, string clientId, string clientSecret, string scope, int tokenRefreshOffset)
+            : this(tokenEndpoint, clientId, clientSecret, scope, tokenRefreshOffset, new HttpClient()) { }
 
-        public OAuthHttpClient(string tokenEndpoint, string clientId, string clientSecret, string scope, HttpClient httpClient)
+        public OAuthHttpClient(string tokenEndpoint, string clientId, string clientSecret, string scope, int tokenRefreshOffset, HttpClient httpClient)
         {
             _tokenEndpoint = tokenEndpoint ?? throw new ArgumentNullException(nameof(tokenEndpoint));
             _clientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
             _clientSecret = clientSecret ?? throw new ArgumentNullException(nameof(clientSecret));
             _scope = scope ?? throw new ArgumentNullException(nameof(scope));
             HttpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+
+            if (tokenRefreshOffset < 0)
+                throw new ArgumentOutOfRangeException(nameof(tokenRefreshOffset), "Token refresh offset must be a positive number.");
+
+            _tokenRefreshOffset = tokenRefreshOffset;
         }
 
         private async Task EnsureTokenAsync()
         {
-            if (!string.IsNullOrEmpty(_accessToken) && _tokenExpiration.HasValue && DateTime.UtcNow < _tokenExpiration.Value)
+            if (!string.IsNullOrEmpty(_accessToken) && _tokenExpiration.HasValue && DateTime.UtcNow < _tokenExpiration.Value.AddSeconds(-_tokenRefreshOffset))
             {
                 return;
             }
@@ -37,7 +44,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
             await _tokenSemaphore.WaitAsync().ConfigureAwait(false);
             try
             {
-                if (string.IsNullOrEmpty(_accessToken) || !_tokenExpiration.HasValue || DateTime.UtcNow >= _tokenExpiration.Value)
+                if (string.IsNullOrEmpty(_accessToken) || !_tokenExpiration.HasValue || DateTime.UtcNow >= _tokenExpiration.Value.AddSeconds(-_tokenRefreshOffset))
                 {
                     await RefreshTokenAsync().ConfigureAwait(false);
                 }
