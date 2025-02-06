@@ -151,11 +151,6 @@ var httpClientHandler = new HttpClientHandler
 
 // Initialize the client with proxy support
 Client client = new("<client_id>", "<client_secret>", httpClientHandler);
-
-## HTTP Timeout Settings
-
-```csharp
-client.HttpClient.Timeout = TimeSpan.FromSeconds(60);
 ```
 
 ## Known Issues
