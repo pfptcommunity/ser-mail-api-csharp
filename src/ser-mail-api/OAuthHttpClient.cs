@@ -74,7 +74,11 @@ namespace Proofpoint.SecureEmailRelay.Mail
             _accessToken = root.GetProperty("access_token").GetString()
                 ?? throw new InvalidOperationException("OAuth token response did not contain an access token.");
 
-            if (root.TryGetProperty("expires_in", out var expiresIn))
+            if (root.TryGetProperty("token_expires_date_time", out var expiresDateTime))
+            {
+                _tokenExpiration = DateTime.Parse(expiresDateTime.GetString()!, null, System.Globalization.DateTimeStyles.RoundtripKind);
+            }
+            else if (root.TryGetProperty("expires_in", out var expiresIn))
             {
                 _tokenExpiration = DateTime.UtcNow.AddSeconds(expiresIn.GetInt32() - 60);
             }
