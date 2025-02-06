@@ -36,7 +36,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
 
         private async Task EnsureTokenAsync()
         {
-            if (!string.IsNullOrEmpty(_accessToken) && _tokenExpiration.HasValue && DateTime.UtcNow < _tokenExpiration.Value.AddSeconds(-_tokenRefreshOffset))
+            if (!string.IsNullOrEmpty(_accessToken) && _tokenExpiration.HasValue && DateTime.UtcNow < _tokenExpiration.Value)
             {
                 return;
             }
@@ -44,7 +44,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
             await _tokenSemaphore.WaitAsync().ConfigureAwait(false);
             try
             {
-                if (string.IsNullOrEmpty(_accessToken) || !_tokenExpiration.HasValue || DateTime.UtcNow >= _tokenExpiration.Value.AddSeconds(-_tokenRefreshOffset))
+                if (string.IsNullOrEmpty(_accessToken) || !_tokenExpiration.HasValue || DateTime.UtcNow >= _tokenExpiration.Value)
                 {
                     await RefreshTokenAsync().ConfigureAwait(false);
                 }
@@ -83,11 +83,11 @@ namespace Proofpoint.SecureEmailRelay.Mail
 
             if (root.TryGetProperty("token_expires_date_time", out var expiresDateTime))
             {
-                _tokenExpiration = DateTime.Parse(expiresDateTime.GetString()!, null, System.Globalization.DateTimeStyles.RoundtripKind);
+                _tokenExpiration = DateTime.Parse(expiresDateTime.GetString()!, null, System.Globalization.DateTimeStyles.RoundtripKind).AddSeconds(-_tokenRefreshOffset);
             }
             else if (root.TryGetProperty("expires_in", out var expiresIn))
             {
-                _tokenExpiration = DateTime.UtcNow.AddSeconds(expiresIn.GetInt32() - 60);
+                _tokenExpiration = DateTime.UtcNow.AddSeconds(expiresIn.GetInt32() - _tokenRefreshOffset);
             }
             else
             {
