@@ -26,6 +26,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
                     clientId,
                     clientSecret,
                     "",
+                    300, // Refresh 5 minutes early
                     new HttpClient(httpClientHandler)
                 );
 
