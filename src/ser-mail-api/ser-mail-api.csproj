@@ -33,9 +33,5 @@
     <None Include="../../README.md" Pack="true" PackagePath="README.md" />
 	<None Include="icon.png" Pack="true" PackagePath="icon.png" />
   </ItemGroup>
-	
-  <ItemGroup>
-    <PackageReference Include="IdentityModel" Version="7.0.0" />
-  </ItemGroup>
 
 </Project>
