@@ -56,6 +56,6 @@ message.AddReplyTo(new MailUser("noreply@proofpoint.com", "No Reply"));
 var result = await client.Send(message);
 
 Console.WriteLine($"HTTP Response: {result.HttpResponse.StatusCode}/{(int)result.HttpResponse.StatusCode}");
-Console.WriteLine($"Message ID: {result.Reason}");
+Console.WriteLine($"Reason: {result.Reason}");
 Console.WriteLine($"Message ID: {result.MessageId}");
 Console.WriteLine($"Request ID: {result.RequestId}");

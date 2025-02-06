@@ -81,8 +81,8 @@ class Program
         // Send the email
         var result = await client.Send(message);
 
-        Console.WriteLine($"HTTP Response: {result.Status}/{result.Reason}");
-        Console.WriteLine($"Message ID: {result.Reason}");
+        Console.WriteLine($"HTTP Response: {result.HttpResponse.StatusCode}/{(int)result.HttpResponse.StatusCode}");
+        Console.WriteLine($"Reason: {result.Reason}");
         Console.WriteLine($"Message ID: {result.MessageId}");
         Console.WriteLine($"Request ID: {result.RequestId}");
     }
