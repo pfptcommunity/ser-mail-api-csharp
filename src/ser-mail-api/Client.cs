@@ -15,7 +15,6 @@ namespace Proofpoint.SecureEmailRelay.Mail
 
         public Client(string clientId, string clientSecret, HttpClientHandler httpClientHandler)
         {
-            // Validate parameters
             if (string.IsNullOrWhiteSpace(clientId))
                 throw new ArgumentException("Client ID must not be null or empty.", nameof(clientId));
             if (string.IsNullOrWhiteSpace(clientSecret))
