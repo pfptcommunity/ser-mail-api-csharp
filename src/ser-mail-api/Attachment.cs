@@ -140,12 +140,12 @@ namespace Proofpoint.SecureEmailRelay.Mail
             return new Attachment(EncodeFileContent(filePath), filename, mimeType, disposition, contentId);
         }
 
-        public static Attachment FromBytes(byte[] data, string filename, string mimeType, Disposition disposition = Disposition.Attachment)
+        public static Attachment FromBytes(byte[] data, string filename, string? mimeType = null, Disposition disposition = Disposition.Attachment, string? contentId = null)
         {
             if (data == null)
                 throw new ArgumentNullException(nameof(data), "Byte array must not be null.");
 
-            return new Attachment(Convert.ToBase64String(data), filename, mimeType, disposition);
+            return new Attachment(Convert.ToBase64String(data), filename, mimeType, disposition, contentId);
         }
 
 
