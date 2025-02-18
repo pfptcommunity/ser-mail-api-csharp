@@ -48,6 +48,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
                 if (value == null)
                     throw new ArgumentNullException(nameof(value), "Body must not be null.");
 
+                // TODO: This should be allowed
                 if (string.IsNullOrWhiteSpace(value))
                     throw new ArgumentException("Body must not be empty or contain only whitespace.", nameof(value));
 
