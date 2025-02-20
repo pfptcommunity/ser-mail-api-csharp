@@ -1,4 +1,4 @@
-# Proofpoint Secure Email Relay Mail API Package
+# Proofpoint Secure Email Relay Mail API C# Library
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Proofpoint.SecureEmailRelay.Mail.svg)](https://www.nuget.org/packages/Proofpoint.SecureEmailRelay.Mail)  
 
 This library implements all the functions of the SER Email Relay API via **C#**.
