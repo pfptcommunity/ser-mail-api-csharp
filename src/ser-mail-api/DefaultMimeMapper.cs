@@ -2,16 +2,44 @@
 
 namespace Proofpoint.SecureEmailRelay.Mail
 {
+    /// <summary>
+    /// Implements a default MIME type mapper that resolves file extensions to MIME types using a predefined mapping.
+    /// </summary>
     public sealed class DefaultMimeMapper : IMimeMapper
     {
+        /// <summary>
+        /// The internal dictionary mapping file extensions to MIME types.
+        /// </summary>
         private readonly Dictionary<string, string> _mimeTypeMap;
+
+        /// <summary>
+        /// The set of known MIME types for quick validation.
+        /// </summary>
         private readonly HashSet<string> _mimeTypes;
+
+        /// <summary>
+        /// The lock object for synchronizing access to the MIME type mappings.
+        /// </summary>
         private readonly object _lock = new();
 
+        /// <summary>
+        /// Gets or sets the default MIME type to use when a specific type cannot be determined.
+        /// </summary>
         public string DefaultMimeType { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to allow fallback to the <see cref="DefaultMimeType"/> when a MIME type is not found.
+        /// </summary>
         public bool AllowFallbackMimeType { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to allow unknown MIME types during validation.
+        /// </summary>
         public bool AllowUnknownMimeType { get; set; }
 
+        /// <summary>
+        /// Initializes a new instance of <see cref="DefaultMimeMapper"/> with a predefined set of MIME type mappings.
+        /// </summary>
         public DefaultMimeMapper()
         {
             DefaultMimeType = "application/octet-stream";
@@ -1018,6 +1046,13 @@ namespace Proofpoint.SecureEmailRelay.Mail
             _mimeTypes = _mimeTypeMap.Values.ToHashSet();
         }
 
+        /// <summary>
+        /// Resolves the MIME type for a given filename based on its extension.
+        /// </summary>
+        /// <param name="fileName">The filename to determine the MIME type for.</param>
+        /// <returns>The MIME type associated with the file extension.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="fileName"/> is null, empty, or whitespace.</exception>
+        /// <exception cref="ArgumentException">Thrown when the file extension cannot be determined or no MIME type is found and fallback is disabled.</exception>
         public string GetMimeType(string fileName)
         {
             if (string.IsNullOrWhiteSpace(fileName))
@@ -1037,6 +1072,12 @@ namespace Proofpoint.SecureEmailRelay.Mail
             throw new ArgumentException($"MIME type could not be determined for '{fileName}'. Provide a MIME type explicitly or enable fallback.");
         }
 
+        /// <summary>
+        /// Determines whether a given MIME type is valid according to the known types or policy settings.
+        /// </summary>
+        /// <param name="mimeType">The MIME type to validate.</param>
+        /// <returns>True if the MIME type is known or unknown types are allowed; otherwise, false.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="mimeType"/> is null, empty, or whitespace.</exception>
         public bool IsValidMimeType(string mimeType)
         {
             if (string.IsNullOrWhiteSpace(mimeType))
@@ -1045,6 +1086,13 @@ namespace Proofpoint.SecureEmailRelay.Mail
             return _mimeTypes.Contains(mimeType) || AllowUnknownMimeType;
         }
 
+        /// <summary>
+        /// Adds or updates a MIME type mapping for a given file extension in a thread-safe manner.
+        /// </summary>
+        /// <param name="extension">The file extension (with or without leading dot) to map.</param>
+        /// <param name="mimeType">The MIME type to associate with the extension.</param>
+        /// <returns>True if a new mapping was added; false if an existing mapping was updated.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="extension"/> or <paramref name="mimeType"/> is null, empty, or whitespace.</exception>
         public bool AddOrUpdateMimeType(string extension, string mimeType)
         {
             if (string.IsNullOrWhiteSpace(extension))
@@ -1070,6 +1118,10 @@ namespace Proofpoint.SecureEmailRelay.Mail
             }
         }
 
+        /// <summary>
+        /// Gets a read-only view of the current MIME type mappings.
+        /// </summary>
+        /// <remarks>This property provides a thread-safe snapshot of the mappings at the time of access.</remarks>
         public IReadOnlyDictionary<string, string> MimeTypeMappings
         {
             get
