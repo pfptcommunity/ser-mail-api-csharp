@@ -25,13 +25,13 @@ namespace Proofpoint.SecureEmailRelay.Mail
     internal class DispositionJsonConverter : JsonConverter<Disposition>
     {
         /// <summary>
-        /// Reads and converts a JSON string to a <see cref="Disposition"/> value.
+        /// Reads a JSON string and converts it to a <see cref="Disposition"/> value.
         /// </summary>
-        /// <param name="reader">The JSON reader to read from.</param>
-        /// <param name="typeToConvert">The type being converted (Disposition).</param>
-        /// <param name="options">The serialization options.</param>
-        /// <returns>The parsed <see cref="Disposition"/> value.</returns>
-        /// <exception cref="JsonException">Thrown when the JSON string is not a valid disposition value.</exception>
+        /// <param name="reader">The JSON reader to extract the string from.</param>
+        /// <param name="typeToConvert">The type being converted (<see cref="Disposition"/>).</param>
+        /// <param name="options">The JSON serializer options.</param>
+        /// <returns>The corresponding <see cref="Disposition"/> value.</returns>
+        /// <exception cref="JsonException">Thrown when the JSON string does not match a valid <see cref="Disposition"/> value.</exception>
         public override Disposition Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             var stringValue = reader.GetString();
@@ -46,10 +46,10 @@ namespace Proofpoint.SecureEmailRelay.Mail
         /// <summary>
         /// Writes a <see cref="Disposition"/> value as a JSON string.
         /// </summary>
-        /// <param name="writer">The JSON writer to write to.</param>
-        /// <param name="value">The <see cref="Disposition"/> value to write.</param>
-        /// <param name="options">The serialization options.</param>
-        /// <exception cref="ArgumentOutOfRangeException">Thrown when the disposition value is invalid.</exception>
+        /// <param name="writer">The JSON writer to output the string to.</param>
+        /// <param name="value">The <see cref="Disposition"/> value to serialize.</param>
+        /// <param name="options">The JSON serializer options.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when the <paramref name="value"/> is not a valid <see cref="Disposition"/>.</exception>
         public override void Write(Utf8JsonWriter writer, Disposition value, JsonSerializerOptions options)
         {
             var stringValue = value switch
@@ -63,7 +63,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
     }
 
     /// <summary>
-    /// Represents an attachment for a mail message, including its content, filename, MIME type, and disposition.
+    /// Represents an attachment for a mail message, encapsulating its Base64-encoded content, filename, MIME type, disposition, and optional Content-ID.
     /// </summary>
     public class Attachment
     {
@@ -79,7 +79,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
         public string Content { get; }
 
         /// <summary>
-        /// Gets the disposition of the attachment (inline or attachment).
+        /// Gets the disposition of the attachment, indicating whether it is inline or a separate file.
         /// </summary>
         [JsonConverter(typeof(DispositionJsonConverter))]
         [JsonPropertyName("disposition")]
@@ -94,12 +94,12 @@ namespace Proofpoint.SecureEmailRelay.Mail
         /// <summary>
         /// Gets the Content-ID of the attachment. Obsolete; use <see cref="ContentId"/> instead.
         /// </summary>
-        [Obsolete]
+        [Obsolete("Use ContentId property instead.")]
         [JsonIgnore]
         public string? Id => ContentId;
 
         /// <summary>
-        /// Gets the Content-ID of the attachment, used for inline references. Null for attachments with <see cref="Disposition.Attachment"/>.
+        /// Gets the Content-ID of the attachment, used for inline references in message content. Null for <see cref="Disposition.Attachment"/>.
         /// </summary>
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         [JsonPropertyName("id")]
@@ -114,13 +114,13 @@ namespace Proofpoint.SecureEmailRelay.Mail
         /// <summary>
         /// Initializes a new instance of <see cref="Attachment"/> with the specified properties.
         /// </summary>
-        /// <param name="content">Base64-encoded content of the attachment. Empty strings are valid for empty content.</param>
-        /// <param name="filename">Filename of the attachment.</param>
-        /// <param name="mimeType">MIME type of the content. If null, deduced from the filename.</param>
-        /// <param name="disposition">Disposition of the attachment. Defaults to <see cref="Disposition.Attachment"/>.</param>
-        /// <param name="contentId">Content-ID of the attachment. If null or whitespace, a random UUID is generated for inline attachments.</param>
+        /// <param name="content">The Base64-encoded content of the attachment. Empty strings are valid.</param>
+        /// <param name="filename">The filename of the attachment.</param>
+        /// <param name="mimeType">The MIME type of the content, or null to deduce from the filename.</param>
+        /// <param name="disposition">The disposition of the attachment, defaults to <see cref="Disposition.Attachment"/>.</param>
+        /// <param name="contentId">The Content-ID of the attachment, or null/whitespace to generate a UUID for inline attachments.</param>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="content"/> or <paramref name="filename"/> is null.</exception>
-        /// <exception cref="ArgumentException">Thrown when <paramref name="content"/> is invalid Base64, <paramref name="filename"/> is empty or too long, or <paramref name="mimeType"/> is resolved to an invalid value.</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="content"/> is invalid Base64, <paramref name="filename"/> is empty/whitespace or exceeds 1000 characters, or <paramref name="mimeType"/> resolves to an invalid value.</exception>
         private Attachment(string content, string filename, string? mimeType = null, Disposition disposition = Disposition.Attachment, string? contentId = null)
         {
             if (content == null)
@@ -151,28 +151,32 @@ namespace Proofpoint.SecureEmailRelay.Mail
         }
 
         /// <summary>
-        /// Creates an <see cref="Attachment"/> from Base64-encoded content.
+        /// Creates an <see cref="Attachment"/> from Base64-encoded content. Deprecated; use <see cref="Builder"/> instead.
         /// </summary>
         /// <param name="base64Content">The Base64-encoded content of the attachment.</param>
         /// <param name="filename">The filename of the attachment.</param>
         /// <param name="mimeType">The MIME type, or null to deduce from the filename.</param>
-        /// <param name="disposition">The disposition of the attachment.</param>
-        /// <param name="contentId">The Content-ID, or null for default behavior.</param>
+        /// <param name="disposition">The disposition of the attachment, defaults to <see cref="Disposition.Attachment"/>.</param>
+        /// <param name="contentId">The Content-ID, or null/whitespace to generate a UUID for inline attachments.</param>
         /// <returns>A new <see cref="Attachment"/> instance.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="base64Content"/> or <paramref name="filename"/> is null.</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="base64Content"/> is invalid Base64 or <paramref name="filename"/> is empty/whitespace.</exception>
+        [Obsolete("Use Attachment.Builder().FromBase64() instead for a more flexible and fluent API.")]
         public static Attachment FromBase64(string base64Content, string filename, string? mimeType = null, Disposition disposition = Disposition.Attachment, string? contentId = null)
             => new(base64Content, filename, mimeType, disposition, contentId);
 
         /// <summary>
-        /// Creates an <see cref="Attachment"/> from a file on disk.
+        /// Creates an <see cref="Attachment"/> from a file on disk. Deprecated; use <see cref="Builder"/> instead.
         /// </summary>
         /// <param name="filePath">The path to the file to attach.</param>
-        /// <param name="disposition">The disposition of the attachment.</param>
-        /// <param name="contentId">The Content-ID, or null for default behavior.</param>
+        /// <param name="disposition">The disposition of the attachment, defaults to <see cref="Disposition.Attachment"/>.</param>
+        /// <param name="contentId">The Content-ID, or null/whitespace to generate a UUID for inline attachments.</param>
         /// <param name="filename">The filename, or null to use the file's name.</param>
         /// <param name="mimeType">The MIME type, or null to deduce from the filename.</param>
         /// <returns>A new <see cref="Attachment"/> instance.</returns>
-        /// <exception cref="ArgumentException">Thrown when <paramref name="filePath"/> is empty or whitespace.</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="filePath"/> is null, empty, or whitespace.</exception>
         /// <exception cref="FileNotFoundException">Thrown when the file at <paramref name="filePath"/> does not exist.</exception>
+        [Obsolete("Use Attachment.Builder().FromFile() instead for a more flexible and fluent API.")]
         public static Attachment FromFile(string filePath, Disposition disposition = Disposition.Attachment, string? contentId = null, string? filename = null, string? mimeType = null)
         {
             if (string.IsNullOrWhiteSpace(filePath))
@@ -185,15 +189,16 @@ namespace Proofpoint.SecureEmailRelay.Mail
         }
 
         /// <summary>
-        /// Creates an <see cref="Attachment"/> from a byte array.
+        /// Creates an <see cref="Attachment"/> from a byte array. Deprecated; use <see cref="Builder"/> instead.
         /// </summary>
         /// <param name="data">The byte array content of the attachment.</param>
         /// <param name="filename">The filename of the attachment.</param>
         /// <param name="mimeType">The MIME type, or null to deduce from the filename.</param>
-        /// <param name="disposition">The disposition of the attachment.</param>
-        /// <param name="contentId">The Content-ID, or null for default behavior.</param>
+        /// <param name="disposition">The disposition of the attachment, defaults to <see cref="Disposition.Attachment"/>.</param>
+        /// <param name="contentId">The Content-ID, or null/whitespace to generate a UUID for inline attachments.</param>
         /// <returns>A new <see cref="Attachment"/> instance.</returns>
-        /// <exception cref="ArgumentNullException">Thrown when <paramref name="data"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="data"/> or <paramref name="filename"/> is null.</exception>
+        [Obsolete("Use Attachment.Builder().FromBytes() instead for a more flexible and fluent API.")]
         public static Attachment FromBytes(byte[] data, string filename, string? mimeType = null, Disposition disposition = Disposition.Attachment, string? contentId = null)
         {
             if (data == null)
@@ -205,7 +210,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
         /// Validates whether a string is a valid Base64-encoded value.
         /// </summary>
         /// <param name="base64String">The string to validate.</param>
-        /// <returns>True if the string is valid Base64 (including empty strings); otherwise, false.</returns>
+        /// <returns><c>true</c> if the string is valid Base64 (including empty strings); otherwise, <c>false</c>.</returns>
         private static bool IsValidBase64(string base64String)
         {
             if (base64String == null)
@@ -237,7 +242,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
         /// <summary>
         /// Returns a JSON string representation of the attachment.
         /// </summary>
-        /// <returns>A formatted JSON string.</returns>
+        /// <returns>A formatted JSON string representing the attachment's properties.</returns>
         public override string ToString()
             => JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
 
@@ -248,31 +253,36 @@ namespace Proofpoint.SecureEmailRelay.Mail
         public static AttachmentBuilder Builder() => new AttachmentBuilder();
 
         /// <summary>
-        /// Defines the initial step interface for building an <see cref="Attachment"/> with content.
+        /// Defines the initial step interface for building an <see cref="Attachment"/> by specifying its content source.
         /// </summary>
         public interface IInitialStep
         {
             /// <summary>
             /// Sets the attachment content from a Base64-encoded string and proceeds to optional configuration.
             /// </summary>
-            /// <param name="base64Content">The Base64-encoded content.</param>
+            /// <param name="base64Content">The Base64-encoded content of the attachment.</param>
             /// <param name="filename">The filename of the attachment.</param>
             /// <returns>An <see cref="IOptionalStep"/> for further configuration.</returns>
+            /// <exception cref="ArgumentNullException">Thrown when <paramref name="base64Content"/> or <paramref name="filename"/> is null.</exception>
+            /// <exception cref="ArgumentException">Thrown when <paramref name="base64Content"/> is invalid Base64.</exception>
             IOptionalStep FromBase64(string base64Content, string filename);
 
             /// <summary>
             /// Sets the attachment content from a file and proceeds to optional configuration.
             /// </summary>
-            /// <param name="filePath">The path to the file.</param>
+            /// <param name="filePath">The path to the file to attach.</param>
             /// <returns>An <see cref="IOptionalStep"/> for further configuration.</returns>
+            /// <exception cref="ArgumentException">Thrown when <paramref name="filePath"/> is null, empty, or whitespace.</exception>
+            /// <exception cref="FileNotFoundException">Thrown when the file at <paramref name="filePath"/> does not exist.</exception>
             IOptionalStep FromFile(string filePath);
 
             /// <summary>
             /// Sets the attachment content from a byte array and proceeds to optional configuration.
             /// </summary>
-            /// <param name="data">The byte array content.</param>
+            /// <param name="data">The byte array content of the attachment.</param>
             /// <param name="filename">The filename of the attachment.</param>
             /// <returns>An <see cref="IOptionalStep"/> for further configuration.</returns>
+            /// <exception cref="ArgumentNullException">Thrown when <paramref name="data"/> or <paramref name="filename"/> is null.</exception>
             IOptionalStep FromBytes(byte[] data, string filename);
         }
 
@@ -282,42 +292,53 @@ namespace Proofpoint.SecureEmailRelay.Mail
         public interface IOptionalStep
         {
             /// <summary>
-            /// Sets the disposition to <see cref="Disposition.Attachment"/>.
+            /// Sets the disposition to <see cref="Disposition.Attachment"/> and clears any Content-ID.
             /// </summary>
-            /// <returns>The current <see cref="IOptionalStep"/> for chaining.</returns>
+            /// <returns>The current builder instance for chaining.</returns>
             IOptionalStep DispositionAttached();
 
             /// <summary>
-            /// Sets the disposition to <see cref="Disposition.Inline"/> without a specific Content-ID.
+            /// Sets the disposition to <see cref="Disposition.Inline"/> without assigning a Content-ID.
             /// </summary>
-            /// <returns>The current <see cref="IOptionalStep"/> for chaining.</returns>
+            /// <returns>The current builder instance for chaining.</returns>
             IOptionalStep DispositionInline();
 
             /// <summary>
-            /// Sets the disposition to <see cref="Disposition.Inline"/> with a specified Content-ID.
+            /// Sets the disposition to <see cref="Disposition.Inline"/> and assigns a custom Content-ID.
             /// </summary>
-            /// <param name="contentId">The Content-ID for the inline attachment.</param>
-            /// <returns>The current <see cref="IOptionalStep"/> for chaining.</returns>
+            /// <param name="contentId">The custom Content-ID to assign to the inline attachment.</param>
+            /// <returns>The current builder instance for chaining.</returns>
+            /// <exception cref="ArgumentNullException">Thrown when <paramref name="contentId"/> is null.</exception>
             IOptionalStep DispositionInline(string contentId);
+
+            /// <summary>
+            /// Sets the disposition to <see cref="Disposition.Inline"/> and generates a dynamic Content-ID, returning it for use.
+            /// </summary>
+            /// <param name="contentId">When this method returns, contains the dynamically generated Content-ID (a UUID) for the inline attachment.</param>
+            /// <returns>The current builder instance for chaining.</returns>
+            IOptionalStep DispositionInline(out string contentId);
 
             /// <summary>
             /// Sets or overrides the filename of the attachment.
             /// </summary>
             /// <param name="filename">The filename to use.</param>
-            /// <returns>The current <see cref="IOptionalStep"/> for chaining.</returns>
+            /// <returns>The current builder instance for chaining.</returns>
+            /// <exception cref="ArgumentNullException">Thrown when <paramref name="filename"/> is null.</exception>
             IOptionalStep Filename(string filename);
 
             /// <summary>
             /// Sets the MIME type of the attachment content.
             /// </summary>
-            /// <param name="mimeType">The MIME type to use.</param>
-            /// <returns>The current <see cref="IOptionalStep"/> for chaining.</returns>
+            /// <param name="mimeType">The MIME type to assign.</param>
+            /// <returns>The current builder instance for chaining.</returns>
+            /// <exception cref="ArgumentNullException">Thrown when <paramref name="mimeType"/> is null.</exception>
             IOptionalStep MimeType(string mimeType);
 
             /// <summary>
             /// Builds and returns the final <see cref="Attachment"/> instance.
             /// </summary>
-            /// <returns>The constructed <see cref="Attachment"/>.</returns>
+            /// <returns>The constructed <see cref="Attachment"/> instance.</returns>
+            /// <exception cref="InvalidOperationException">Thrown if content or filename is not set via an initial step.</exception>
             Attachment Build();
         }
 
@@ -341,7 +362,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
             }
 
             /// <summary>
-            /// Sets the disposition to <see cref="Disposition.Attachment"/> and clears the Content-ID.
+            /// Sets the disposition to <see cref="Disposition.Attachment"/> and clears any Content-ID.
             /// </summary>
             /// <returns>The current builder instance for chaining.</returns>
             public IOptionalStep DispositionAttached()
@@ -352,7 +373,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
             }
 
             /// <summary>
-            /// Sets the disposition to <see cref="Disposition.Inline"/> and clears the Content-ID.
+            /// Sets the disposition to <see cref="Disposition.Inline"/> without assigning a Content-ID.
             /// </summary>
             /// <returns>The current builder instance for chaining.</returns>
             public IOptionalStep DispositionInline()
@@ -363,9 +384,22 @@ namespace Proofpoint.SecureEmailRelay.Mail
             }
 
             /// <summary>
-            /// Sets the disposition to <see cref="Disposition.Inline"/> with a specified Content-ID.
+            /// Sets the disposition to <see cref="Disposition.Inline"/> and generates a dynamic Content-ID, returning it for use.
             /// </summary>
-            /// <param name="contentId">The Content-ID for the inline attachment.</param>
+            /// <param name="contentId">When this method returns, contains the dynamically generated Content-ID (a UUID) for the inline attachment.</param>
+            /// <returns>The current builder instance for chaining.</returns>
+            public IOptionalStep DispositionInline(out string contentId)
+            {
+                _disposition = Disposition.Inline;
+                _contentId = Guid.NewGuid().ToString();
+                contentId = _contentId;
+                return this;
+            }
+
+            /// <summary>
+            /// Sets the disposition to <see cref="Disposition.Inline"/> and assigns a custom Content-ID.
+            /// </summary>
+            /// <param name="contentId">The custom Content-ID to assign to the inline attachment.</param>
             /// <returns>The current builder instance for chaining.</returns>
             /// <exception cref="ArgumentNullException">Thrown when <paramref name="contentId"/> is null.</exception>
             public IOptionalStep DispositionInline(string contentId)
@@ -390,7 +424,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
             /// <summary>
             /// Sets the MIME type of the attachment content.
             /// </summary>
-            /// <param name="mimeType">The MIME type to use.</param>
+            /// <param name="mimeType">The MIME type to assign.</param>
             /// <returns>The current builder instance for chaining.</returns>
             /// <exception cref="ArgumentNullException">Thrown when <paramref name="mimeType"/> is null.</exception>
             public IOptionalStep MimeType(string mimeType)
@@ -404,7 +438,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
             /// </summary>
             /// <param name="filePath">The path to the file to attach.</param>
             /// <returns>The current builder instance for chaining.</returns>
-            /// <exception cref="ArgumentException">Thrown when <paramref name="filePath"/> is empty or whitespace.</exception>
+            /// <exception cref="ArgumentException">Thrown when <paramref name="filePath"/> is null, empty, or whitespace.</exception>
             /// <exception cref="FileNotFoundException">Thrown when the file at <paramref name="filePath"/> does not exist.</exception>
             public IOptionalStep FromFile(string filePath)
             {
@@ -421,7 +455,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
             /// <summary>
             /// Sets the attachment content from a byte array.
             /// </summary>
-            /// <param name="data">The byte array content.</param>
+            /// <param name="data">The byte array content of the attachment.</param>
             /// <param name="filename">The filename of the attachment.</param>
             /// <returns>The current builder instance for chaining.</returns>
             /// <exception cref="ArgumentNullException">Thrown when <paramref name="data"/> or <paramref name="filename"/> is null.</exception>
@@ -440,11 +474,11 @@ namespace Proofpoint.SecureEmailRelay.Mail
             /// <summary>
             /// Sets the attachment content from a Base64-encoded string.
             /// </summary>
-            /// <param name="base64Content">The Base64-encoded content.</param>
+            /// <param name="base64Content">The Base64-encoded content of the attachment.</param>
             /// <param name="filename">The filename of the attachment.</param>
             /// <returns>The current builder instance for chaining.</returns>
             /// <exception cref="ArgumentNullException">Thrown when <paramref name="base64Content"/> or <paramref name="filename"/> is null.</exception>
-            /// <exception cref="ArgumentException">Thrown when <paramref name="base64Content"/> is not valid Base64.</exception>
+            /// <exception cref="ArgumentException">Thrown when <paramref name="base64Content"/> is invalid Base64.</exception>
             public IOptionalStep FromBase64(string base64Content, string filename)
             {
                 if (base64Content == null)
@@ -462,11 +496,10 @@ namespace Proofpoint.SecureEmailRelay.Mail
             /// <summary>
             /// Builds and returns the final <see cref="Attachment"/> instance.
             /// </summary>
-            /// <returns>The constructed <see cref="Attachment"/>.</returns>
-            /// <exception cref="InvalidOperationException">Thrown if content or filename is not set via an initial step.</exception>
+            /// <returns>The constructed <see cref="Attachment"/> instance.</returns>
+            /// <exception cref="InvalidOperationException">Thrown if content or filename is not set via an initial step (<see cref="FromBase64"/>, <see cref="FromFile"/>, or <see cref="FromBytes"/>).</exception>
             public Attachment Build()
             {
-                // This should never happen because the builder enforces step 1
                 if (_content == null)
                     throw new InvalidOperationException("Content must be set before building the attachment. Call FromBase64, FromFile, or FromBytes first.");
                 if (_filename == null)
