@@ -3,13 +3,35 @@ using System.Text.Json;
 
 namespace Proofpoint.SecureEmailRelay.Mail
 {
+    /// <summary>
+    /// Provides a client for interacting with the Proofpoint Secure Email Relay API to send messages.
+    /// </summary>
     public sealed class Client
     {
+        /// <summary>
+        /// The HTTP client used to communicate with the Proofpoint SER API, configured with OAuth authentication.
+        /// </summary>
         private readonly OAuthHttpClient httpClient;
 
+        /// <summary>
+        /// Initializes a new instance of <see cref="Client"/> with the specified client ID and secret, using a default HTTP client handler.
+        /// </summary>
+        /// <param name="clientId">The client ID for OAuth authentication.</param>
+        /// <param name="clientSecret">The client secret for OAuth authentication.</param>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="clientId"/> or <paramref name="clientSecret"/> is null, empty, or whitespace.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when the client fails to initialize due to configuration errors.</exception>
         public Client(string clientId, string clientSecret)
             : this(clientId, clientSecret, new HttpClientHandler()) { }
 
+        /// <summary>
+        /// Initializes a new instance of <see cref="Client"/> with the specified client ID, secret, and custom HTTP client handler.
+        /// </summary>
+        /// <param name="clientId">The client ID for OAuth authentication.</param>
+        /// <param name="clientSecret">The client secret for OAuth authentication.</param>
+        /// <param name="httpClientHandler">The HTTP client handler for customizing HTTP requests.</param>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="clientId"/> or <paramref name="clientSecret"/> is null, empty, or whitespace.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="httpClientHandler"/> is null.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when the client fails to initialize due to configuration errors.</exception>
         public Client(string clientId, string clientSecret, HttpClientHandler httpClientHandler)
         {
             if (string.IsNullOrWhiteSpace(clientId))
@@ -39,6 +61,13 @@ namespace Proofpoint.SecureEmailRelay.Mail
             }
         }
 
+        /// <summary>
+        /// Sends a message asynchronously to the Proofpoint Secure Email Relay API.
+        /// </summary>
+        /// <param name="message">The message to send.</param>
+        /// <returns>A task that resolves to a <see cref="SendResult"/> containing the result of the send operation.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="message"/> is null.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when serialization, HTTP request, or an unexpected error occurs during the send operation.</exception>
         public async Task<SendResult> Send(Message message)
         {
             if (message == null)
