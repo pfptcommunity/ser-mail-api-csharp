@@ -23,7 +23,7 @@ Install-Package Proofpoint.SecureEmailRelay.Mail
 
 ## Features
 
-- **Send Emails**: Easily compose and send emails with minimal code.
+- **Send Emails**: Easily compose and send emails with minimal code using a fluent builder pattern.
 - **Support for Attachments**:
     - Attach files from disk
     - Encode attachments as Base64
