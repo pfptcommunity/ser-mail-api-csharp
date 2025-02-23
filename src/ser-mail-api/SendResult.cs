@@ -1,34 +1,41 @@
 ﻿using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace Proofpoint.SecureEmailRelay.Mail
 {
     public sealed class SendResult
     {
-        public string MessageId { get; init; } = string.Empty;
-        public string Reason { get; init; } = string.Empty;
-        public string RequestId { get; init; } = string.Empty;
+        public string MessageId { get; } = string.Empty;
+        public string Reason { get; } = string.Empty;
+        public string RequestId { get; } = string.Empty;
 
-        public HttpResponseMessage HttpResponse { get; init; }
-        public string RawJson { get; init; }
+        public HttpResponseMessage HttpResponse { get; }
 
-        private SendResult(HttpResponseMessage httpResponse, string? rawJson)
+        public string RawJson { get; }
+
+        private SendResult(HttpResponseMessage httpResponse, string rawJson)
         {
-            HttpResponse = httpResponse;
+            HttpResponse = httpResponse ?? throw new ArgumentNullException(nameof(httpResponse), "HTTP response cannot be null.");
             RawJson = rawJson ?? string.Empty;
 
             if (!string.IsNullOrWhiteSpace(RawJson))
             {
-                var parsedJson = JsonSerializer.Deserialize<SendResultDto>(RawJson, new JsonSerializerOptions
+                try
                 {
-                    PropertyNameCaseInsensitive = true
-                });
+                    var parsedJson = JsonSerializer.Deserialize<Dictionary<string, string>>(RawJson, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
 
-                if (parsedJson != null)
+                    if (parsedJson != null)
+                    {
+                        MessageId = parsedJson.TryGetValue("message_id", out var msgId) ? msgId : string.Empty;
+                        Reason = parsedJson.TryGetValue("reason", out var reason) ? reason : string.Empty;
+                        RequestId = parsedJson.TryGetValue("request_id", out var reqId) ? reqId : string.Empty;
+                    }
+                }
+                catch
                 {
-                    MessageId = parsedJson.MessageId ?? string.Empty;
-                    Reason = parsedJson.Reason ?? string.Empty;
-                    RequestId = parsedJson.RequestId ?? string.Empty;
+                    // Handle JSON parsing failure gracefully
                 }
             }
         }
@@ -36,21 +43,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
         internal static async Task<SendResult> CreateAsync(HttpResponseMessage httpResponse)
         {
             string responseJson = await httpResponse.Content.ReadAsStringAsync();
-
             return new SendResult(httpResponse, responseJson);
         }
-
-        private class SendResultDto
-        {
-            [JsonPropertyName("message_id")]
-            public string? MessageId { get; set; }
-
-            [JsonPropertyName("reason")]
-            public string? Reason { get; set; }
-
-            [JsonPropertyName("request_id")]
-            public string? RequestId { get; set; }
-        }
     }
-
 }
