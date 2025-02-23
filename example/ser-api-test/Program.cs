@@ -1,4 +1,5 @@
 ﻿using Proofpoint.SecureEmailRelay.Mail;
+using System.Net.Http.Headers;
 using System.Text.Json;
 
 // Read stashed API Key Data
@@ -19,38 +20,37 @@ else
     Environment.Exit(1);
 }
 
-
-// Create a new Message object
-var message = new Message("This is a test email", new MailUser("sender@example.com", "Joe Sender"));
-
-// Add text content body
-message.AddContent(new Content("This is a test message", ContentType.Text));
-
-// Add HTML content body, with embedded image
-message.AddContent(new Content("<b>This is a test message</b><br><img src=\"cid:logo\">", ContentType.Html));
-
-// Create an inline attachment from disk and set the cid
-message.AddAttachment(Attachment.FromFile("C:/temp/logo.png", Disposition.Inline, "logo"));
-
-// Add recipients
-message.AddTo(new MailUser("recipient1@example.com", "Recipient 1"));
-message.AddTo(new MailUser("recipient2@example.com", "Recipient 2"));
-
-// Add CC
-message.AddCc(new MailUser("cc1@example.com", "CC Recipient 1"));
-message.AddCc(new MailUser("cc2@example.com", "CC Recipient 2"));
-
-// Add BCC
-message.AddBcc(new MailUser("bcc1@example.com", "BCC Recipient 1"));
-message.AddBcc(new MailUser("bcc2@example.com", "BCC Recipient 2"));
-
-// Add attachments
-message.AddAttachment(Attachment.FromBase64("VGhpcyBpcyBhIHRlc3Qh", "test.txt"));
-message.AddAttachment(Attachment.FromFile("C:/temp/file.csv"));
-message.AddAttachment(Attachment.FromBytes(new byte[] { 1, 2, 3 }, "bytes.txt", "text/plain"));
-
-// Set Reply-To
-message.AddReplyTo(new MailUser("noreply@proofpoint.com", "No Reply"));
+// Create a new Message object using the fluid builder with manual and dynamic ContentId in one HTML body
+var message = Message.Builder()
+    .From("sender@example.com", "Joe Sender")
+    .To("recipient1@example.com", "Recipient 1")
+    .To("recipient2@example.com", "Recipient 2")
+    .Subject("This is a test email")
+    .Content("This is a test message", ContentType.Text) // Plain text alternative
+    .Attachment(Attachment.Builder()
+        .FromFile("C:/temp/logo_a.png")
+        .DispositionInline("logo") // Manual ContentId
+        .Build())
+    .Attachment(Attachment.Builder()
+        .FromFile("C:/temp/logo_b.png")
+        .DispositionInline(out string dynamicCid) // Dynamic ContentId
+        .Build())
+    .Content($"<b>Static CID</b><br><img src=\"cid:logo\"><br><b>Dynamic CID</b><br><img src=\"cid:{dynamicCid}\">", ContentType.Html) 
+    .Cc("cc1@example.com", "CC Recipient 1")
+    .Cc("cc2@example.com", "CC Recipient 2")
+    .Bcc("bcc1@example.com", "BCC Recipient 1")
+    .Bcc("bcc2@example.com", "BCC Recipient 2")
+    .Attachment(Attachment.Builder()
+        .FromBase64("VGhpcyBpcyBhIHRlc3Qh", "test.txt")
+        .Build())
+    .Attachment(Attachment.Builder()
+        .FromFile("C:/temp/file.csv")
+        .Build())
+    .Attachment(Attachment.Builder()
+        .FromBytes(new byte[] { 1, 2, 3 }, "bytes.txt")
+        .Build())
+    .ReplyTo("noreply@example.com", "No Reply")
+    .Build();
 
 // Send the email
 var result = await client.Send(message);
