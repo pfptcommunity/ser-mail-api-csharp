@@ -1,5 +1,4 @@
 ﻿using Proofpoint.SecureEmailRelay.Mail;
-using System.Net.Http.Headers;
 using System.Text.Json;
 
 // Read stashed API Key Data
@@ -35,7 +34,7 @@ var message = Message.Builder()
         .FromFile("C:/temp/logo_b.png")
         .DispositionInline(out string dynamicCid) // Dynamic ContentId
         .Build())
-    .Content($"<b>Static CID</b><br><img src=\"cid:logo\"><br><b>Dynamic CID</b><br><img src=\"cid:{dynamicCid}\">", ContentType.Html) 
+    .Content($"<b>Static CID</b><br><img src=\"cid:logo\"><br><b>Dynamic CID</b><br><img src=\"cid:{dynamicCid}\">", ContentType.Html)
     .Cc("cc1@example.com", "CC Recipient 1")
     .Cc("cc2@example.com", "CC Recipient 2")
     .Bcc("bcc1@example.com", "BCC Recipient 1")

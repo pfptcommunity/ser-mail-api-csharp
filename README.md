@@ -204,4 +204,3 @@ This issue has been reported to **Proofpoint Product Management**.
 ## Additional Resources
 For more information, refer to the official **Proofpoint Secure Email Relay API documentation**:  
 [**API Documentation**](https://api-docs.ser.proofpoint.com/docs/email-submission)
-
