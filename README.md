@@ -46,37 +46,34 @@ class Program
     {
         var client = new Client("<client_id>", "<client_secret>");
 
-        // Create a new Message object
-        var message = new Message("This is a test email", new MailUser("sender@example.com", "Joe Sender"));
-
-        // Add text content body
-        message.AddContent(new Content("This is a test message", ContentType.Text));
-
-        // Add HTML content body, with embedded image
-        message.AddContent(new Content("<b>This is a test message</b><br><img src=\"cid:logo\">", ContentType.Html));
-
-        // Create an inline attachment from disk and set the cid
-        message.AddAttachment(Attachment.FromFile("C:/temp/logo.png", Disposition.Inline, "logo"));
-
-        // Add recipients
-        message.AddTo(new MailUser("recipient1@example.com", "Recipient 1"));
-        message.AddTo(new MailUser("recipient2@example.com", "Recipient 2"));
-
-        // Add CC
-        message.AddCc(new MailUser("cc1@example.com", "CC Recipient 1"));
-        message.AddCc(new MailUser("cc2@example.com", "CC Recipient 2"));
-
-        // Add BCC
-        message.AddBcc(new MailUser("bcc1@example.com", "BCC Recipient 1"));
-        message.AddBcc(new MailUser("bcc2@example.com", "BCC Recipient 2"));
-
-        // Add attachments
-        message.AddAttachment(Attachment.FromBase64("VGhpcyBpcyBhIHRlc3Qh", "test.txt"));
-        message.AddAttachment(Attachment.FromFile("C:/temp/file.csv"));
-        message.AddAttachment(Attachment.FromBytes(new byte[] { 1, 2, 3 }, "bytes.txt", "text/plain"));
-
-        // Set Reply-To
-        message.AddReplyTo(new MailUser("noreply@proofpoint.com", "No Reply"));
+        // Create a new Message object using the fluid builder
+        var message = Message.Builder()
+            .From("sender@example.com", "Joe Sender")
+            .To("recipient1@example.com", "Recipient 1")
+            .To("recipient2@example.com", "Recipient 2")
+            .Subject("This is a test email")
+            .Content("This is a test message", ContentType.Text) // Plain text alternative
+            .Attachment(Attachment.Builder()
+                .FromFile("C:/temp/logo.png")
+                .DispositionInline(out string logoId) // Dynamic Content-ID
+                .Build())
+            .Content($"<b>This is a test message</b><br><img src=\"cid:{logoId}\">", ContentType.Html) // Single HTML body
+            .Cc("cc1@example.com", "CC Recipient 1")
+            .Cc("cc2@example.com", "CC Recipient 2")
+            .Bcc("bcc1@example.com", "BCC Recipient 1")
+            .Bcc("bcc2@example.com", "BCC Recipient 2")
+            .Attachment(Attachment.Builder()
+                .FromBase64("VGhpcyBpcyBhIHRlc3Qh", "test.txt")
+                .Build())
+            .Attachment(Attachment.Builder()
+                .FromFile("C:/temp/file.csv")
+                .Build())
+            .Attachment(Attachment.Builder()
+                .FromBytes(new byte[] { 1, 2, 3 }, "bytes.txt")
+                .MimeType("text/plain")
+                .Build())
+            .ReplyTo("noreply@proofpoint.com", "No Reply")
+            .Build();
 
         // Send the email
         var result = await client.Send(message);
@@ -95,36 +92,57 @@ class Program
 - If the MIME type cannot be determined, an exception is raised.
 
 ```csharp
-// Create an attachment from disk; the MIME type will be "text/csv", and disposition will be "Disposition.Attachment"
-Attachment.FromFile("C:/temp/file.csv");
+// MIME type deduced as "text/csv", disposition defaults to "Disposition.Attachment"
+Attachment.Builder().FromFile("C:/temp/file.csv").Build();
 
-// This will throw an error, as the MIME type is unknown
-Attachment.FromFile("C:/temp/file.unknown");
+// Throws an error due to unknown MIME type
+Attachment.Builder().FromFile("C:/temp/file.unknown").Build();
 
-// Create an attachment and specify the type information. The disposition will be "Disposition.Attachment", filename will be unknown.txt, and MIME type "text/plain"
-Attachment.FromFile("C:/temp/file.unknown", filename: "unknown.txt");
-
-// Create an attachment and specify the type information. The disposition will be "Disposition.Attachment", filename will be file.unknown, and MIME type "text/plain"
-Attachment.FromFile("C:/temp/file.unknown", mimeType: "text/plain");
+// Specify filename and MIME type for unknown extension
+Attachment.Builder()
+    .FromFile("C:/temp/file.unknown")
+    .Filename("unknown.txt")
+    .MimeType("text/plain")
+    .Build();
 ```
 
 ## Inline Attachments and Content-IDs
 
-When creating attachments, they are `Disposition.Attachment` by default. To properly reference a **Content-ID** (e.g.,
-`<img src="cid:logo">`), you must explicitly set the attachment disposition to `Disposition.Inline`.
-If the attachment type is set to `Disposition.Inline`, a default unique **Content-ID** will be generated.
+Attachments default to Disposition.Attachment. For inline attachments referenced in HTML (e.g., `<img src="cid:logo">`), use AttachmentBuilder’s `DispositionInline` methods to set the disposition and manage the `ContentId`:
 
 ### Using a Dynamically Generated Content-ID
+
+Generate a unique ContentId (UUID) inline and use it in the HTML body:
 ```csharp
-var logo = Attachment.FromFile("C:/temp/logo.png", Disposition.Inline);
-message.AddContent(new Content($"<b>Test</b><br><img src=\"cid:{logo.ContentId}\">", ContentType.Html));
-message.AddAttachment(logo);
+var message = Message.Builder()
+    .From("sender@example.com", "Joe Sender")
+    .To("recipient@example.com")
+    .Subject("Test Email")
+    .Content("Plain text fallback", ContentType.Text)
+    .Attachment(Attachment.Builder()
+        .FromFile("C:/temp/logo.png")
+        .DispositionInline(out string logoId) // Dynamic UUID
+        .Build())
+    .Content($"<b>Test</b><br><img src=\"cid:{logoId}\">", ContentType.Html)
+    .Build();
 ```
 
 ### Setting a Custom Content-ID
+
+Specify a custom `ContentId` directly within the builder:
+
 ```csharp
-message.AddAttachment(Attachment.FromFile("C:/temp/logo.png", Disposition.Inline, "logo"));
-message.AddContent(new Content("<b>Test</b><br><img src=\"cid:logo\">", ContentType.Html));
+var message = Message.Builder()
+    .From("sender@example.com", "Joe Sender")
+    .To("recipient@example.com")
+    .Subject("Test Email")
+    .Content("Plain text fallback", ContentType.Text)
+    .Attachment(Attachment.Builder()
+        .FromFile("C:/temp/logo.png")
+        .DispositionInline("logo") // Custom ContentId
+        .Build())
+    .Content("<b>Test</b><br><img src=\"cid:logo\">", ContentType.Html)
+    .Build();
 ```
 
 ### Proxy Support
