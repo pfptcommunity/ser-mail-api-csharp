@@ -2,7 +2,7 @@ name: Publish NuGet Package
 
 on:
   release:
-    types: [published]  # Runs when a release is published
+    types: [published]
 
 jobs:
   build-and-publish:
@@ -21,7 +21,7 @@ jobs:
         id: get_version
         run: |
           TAG_NAME=${{ github.event.release.tag_name }}
-          VERSION=${TAG_NAME#v}  # Strip 'v' prefix (e.g., v1.1.0 -> 1.1.0)
+          VERSION=${TAG_NAME#v}
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Restore dependencies
@@ -39,9 +39,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: nupkg/*.nupkg
+          asset_path: ./nupkg/Proofpoint.SecureEmailRelay.Mail.${{ env.VERSION }}.nupkg
           asset_name: Proofpoint.SecureEmailRelay.Mail-${{ env.VERSION }}.nupkg
           asset_content_type: application/octet-stream
+
 
       - name: Publish to NuGet
         run: dotnet nuget push nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
