@@ -1,0 +1,49 @@
+name: Publish NuGet Package
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '6.0.x'
+
+      - name: Extract version from release tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+
+      # Restore dependencies ONLY for the NuGet package project
+      - name: Restore dependencies
+        run: dotnet restore src/ser-mail-api/ser-mail-api.csproj
+
+      # Build ONLY the NuGet package project
+      - name: Build the project
+        run: dotnet build src/ser-mail-api/ser-mail-api.csproj --configuration Release --no-restore
+
+      # Pack ONLY the NuGet package (excluding example/)
+      - name: Pack NuGet package with dynamic version
+        run: dotnet pack src/ser-mail-api/ser-mail-api.csproj --configuration Release --output nupkg /p:Version=${{ env.VERSION }}
+
+      # Upload NuGet package to GitHub Release
+      - name: Upload NuGet package to GitHub Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: nupkg/Proofpoint.SecureEmailRelay.Mail.${{ env.VERSION }}.nupkg
+          asset_name: Proofpoint.SecureEmailRelay.Mail-${{ env.VERSION }}.nupkg
+          asset_content_type: application/octet-stream
+
+      # Publish ONLY the library to NuGet (excluding example/)
+      - name: Publish to NuGet
+        run: dotnet nuget push nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
