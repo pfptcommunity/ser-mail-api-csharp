@@ -44,7 +44,8 @@ class Program
 {
     static async Task Main()
     {
-        var client = new Client("<client_id>", "<client_secret>");
+        // Default region when not specified is Region.US
+        var client = new Client("<client_id>", "<client_secret>", Region.US);
 
         // Create a new Message object using the fluid builder
         var message = Message.Builder()
@@ -168,7 +169,8 @@ var httpClientHandler = new HttpClientHandler
 };
 
 // Initialize the client with proxy support
-Client client = new("<client_id>", "<client_secret>", httpClientHandler);
+// Default region when not specified is Region.US
+Client client = new("<client_id>", "<client_secret>", httpClientHandler, Region.US);
 ```
 
 ## Known Issues
