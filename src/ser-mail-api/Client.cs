@@ -47,7 +47,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
             try
             {
                 httpClient = new OAuthHttpClient(
-                    "https://mail.ser.proofpoint.com/v1/token",
+                    $"https://{region.GetStringValue()}/v1/token",
                     clientId,
                     clientSecret,
                     "",
