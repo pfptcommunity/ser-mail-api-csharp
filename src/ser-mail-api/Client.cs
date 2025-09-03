@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Text;
 using System.Text.Json;
 
 namespace Proofpoint.SecureEmailRelay.Mail
@@ -18,10 +19,11 @@ namespace Proofpoint.SecureEmailRelay.Mail
         /// </summary>
         /// <param name="clientId">The client ID for OAuth authentication.</param>
         /// <param name="clientSecret">The client secret for OAuth authentication.</param>
+        /// <param name="region">API service region selector.</param>
         /// <exception cref="ArgumentException">Thrown when <paramref name="clientId"/> or <paramref name="clientSecret"/> is null, empty, or whitespace.</exception>
         /// <exception cref="InvalidOperationException">Thrown when the client fails to initialize due to configuration errors.</exception>
-        public Client(string clientId, string clientSecret)
-            : this(clientId, clientSecret, new HttpClientHandler()) { }
+        public Client(string clientId, string clientSecret, Region region = Region.US)
+            : this(clientId, clientSecret, new HttpClientHandler(), region) { }
 
         /// <summary>
         /// Initializes a new instance of <see cref="Client"/> with the specified client ID, secret, and custom HTTP client handler.
@@ -29,10 +31,11 @@ namespace Proofpoint.SecureEmailRelay.Mail
         /// <param name="clientId">The client ID for OAuth authentication.</param>
         /// <param name="clientSecret">The client secret for OAuth authentication.</param>
         /// <param name="httpClientHandler">The HTTP client handler for customizing HTTP requests.</param>
+        /// <param name="region">API service region selector.</param>
         /// <exception cref="ArgumentException">Thrown when <paramref name="clientId"/> or <paramref name="clientSecret"/> is null, empty, or whitespace.</exception>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="httpClientHandler"/> is null.</exception>
         /// <exception cref="InvalidOperationException">Thrown when the client fails to initialize due to configuration errors.</exception>
-        public Client(string clientId, string clientSecret, HttpClientHandler httpClientHandler)
+        public Client(string clientId, string clientSecret, HttpClientHandler httpClientHandler, Region region = Region.US)
         {
             if (string.IsNullOrWhiteSpace(clientId))
                 throw new ArgumentException("Client ID must not be null or empty.", nameof(clientId));
@@ -53,7 +56,7 @@ namespace Proofpoint.SecureEmailRelay.Mail
                 );
 
                 httpClient.HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd("CSharp-SER-API/1.0");
-                httpClient.HttpClient.BaseAddress = new Uri("https://mail.ser.proofpoint.com/v1/");
+                httpClient.HttpClient.BaseAddress = new Uri($"https://{region.GetStringValue()}/v1/");
             }
             catch (Exception ex)
             {
