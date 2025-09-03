@@ -10,15 +10,14 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '6.0.x'
 
       - name: Extract version from release tag
-        id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
 
       # Restore dependencies ONLY for the NuGet package project
@@ -35,15 +34,12 @@ jobs:
 
       # Upload NuGet package to GitHub Release
       - name: Upload NuGet package to GitHub Release
-        uses: actions/upload-release-asset@v1
+        uses: softprops/action-gh-release@v1
+        with:
+          files: nupkg/Proofpoint.SecureEmailRelay.Mail.${{ env.VERSION }}.nupkg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: nupkg/Proofpoint.SecureEmailRelay.Mail.${{ env.VERSION }}.nupkg
-          asset_name: Proofpoint.SecureEmailRelay.Mail-${{ env.VERSION }}.nupkg
-          asset_content_type: application/octet-stream
 
       # Publish ONLY the library to NuGet (excluding example/)
-      - name: Publish to NuGet
-        run: dotnet nuget push nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      #- name: Publish to NuGet
+      #  run: dotnet nuget push nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
