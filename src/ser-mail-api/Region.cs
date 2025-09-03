@@ -44,6 +44,12 @@ namespace Proofpoint.SecureEmailRelay.Mail
         US,
 
         /// <summary>
+        /// Canada region, associated with the endpoint "mail-ca.ser.proofpoint.com".
+        /// </summary>
+        [StringValue("mail-ca.ser.proofpoint.com")]
+        CA,
+
+        /// <summary>
         /// European Union region, associated with the endpoint "mail-eu.ser.proofpoint.com".
         /// </summary>
         [StringValue("mail-eu.ser.proofpoint.com")]
